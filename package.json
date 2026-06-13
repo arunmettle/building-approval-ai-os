@@ -1,0 +1,17 @@
+{
+  "name": "building-approval-ai-os",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "aggregate:sources": "node src/aggregator/index.js",
+    "assess:example": "node src/assessment/cli.js examples/intake/sunshine-coast-shed.json",
+    "extract:sources": "node src/extraction/index.js",
+    "retrieval:build": "node src/retrieval/build-index.js",
+    "retrieval:example": "node src/retrieval/cli.js examples/intake/sunshine-coast-shed.json",
+    "report:example": "node src/reporting/cli.js examples/intake/sunshine-coast-shed.json",
+    "research:loop": "node src/research-loop/index.js",
+    "research:run": "node src/research-loop/index.js",
+    "validate": "node src/research-loop/index.js --dry-run"
+  }
+}

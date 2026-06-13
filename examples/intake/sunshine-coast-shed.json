@@ -1,0 +1,19 @@
+{
+  "jurisdictionId": "au-qld-sunshine-coast",
+  "projectType": "shed",
+  "planAreaSqm": 9,
+  "maxHeightM": 2.4,
+  "meanHeightM": 2.1,
+  "longestSideM": 5,
+  "easementStatus": "no",
+  "boundarySetbacksCompliant": true,
+  "locatedOverInfrastructure": false,
+  "nearRetainingWall": false,
+  "distanceToFrontBoundaryM": 6,
+  "distanceToSideBoundaryM": 2,
+  "distanceToRearBoundaryM": 2,
+  "zoneKnown": true,
+  "overlaysKnown": true,
+  "nearPoolEnclosure": false,
+  "affectsExistingStructure": false
+}

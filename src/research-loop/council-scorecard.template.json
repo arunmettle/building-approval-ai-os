@@ -1,0 +1,18 @@
+{
+  "state": "Queensland",
+  "candidates": [
+    {
+      "councilName": "",
+      "planningSchemeAccessibility": 0,
+      "formsChecklistAvailability": 0,
+      "gisAccessibility": 0,
+      "permitGuidanceClarity": 0,
+      "historicalDecisionVisibility": 0,
+      "freshnessTraceability": 0,
+      "marketDensityFit": 0,
+      "sourceUrls": [],
+      "knownGaps": [],
+      "recommendation": ""
+    }
+  ]
+}

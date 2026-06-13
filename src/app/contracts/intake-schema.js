@@ -1,0 +1,58 @@
+export const initialIntakeSchema = {
+  requiredFields: [
+    "address",
+    "projectType",
+    "planAreaSqm",
+    "maxHeightM",
+    "meanHeightM",
+    "longestSideM",
+    "roofed",
+    "attachedToExistingDwelling",
+    "distanceToFrontBoundaryM",
+    "distanceToSideBoundaryM",
+    "distanceToRearBoundaryM",
+    "zoneKnown",
+    "overlaysKnown"
+  ],
+  optionalFields: [
+    "lotPlan",
+    "coordinates",
+    "localAuthorityOverride",
+    "currentUse",
+    "zone",
+    "overlays",
+    "easementStatus",
+    "nearPoolEnclosure",
+    "nearRetainingWall",
+    "intendedUse",
+    "locatedOverInfrastructure",
+    "excavationOrFillRequired",
+    "affectsExistingStructure",
+    "sitePlanAvailable",
+    "dimensionedDrawingAvailable",
+    "engineeringDocsAvailable",
+    "ownerConsentAvailable",
+    "existingApprovalsAvailable",
+    "sitePhotosAvailable"
+  ],
+  enumFields: {
+    projectType: ["deck", "pergola", "shed", "patio"],
+    easementStatus: ["yes", "no", "unknown"],
+    currentUse: ["residential", "mixed-use", "commercial", "unknown"],
+    intendedUse: ["non-habitable", "habitable", "storage", "outdoor-living", "unknown"]
+  },
+  unknownTriggersProfessionalReview: [
+    "zoneKnown",
+    "overlaysKnown",
+    "distanceToFrontBoundaryM",
+    "distanceToSideBoundaryM",
+    "distanceToRearBoundaryM",
+    "planAreaSqm",
+    "maxHeightM",
+    "easementStatus",
+    "nearPoolEnclosure",
+    "nearRetainingWall",
+    "locatedOverInfrastructure",
+    "affectsExistingStructure"
+  ]
+};
