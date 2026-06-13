@@ -11,18 +11,97 @@
     <link rel="stylesheet" href="/styles.css" />
   </head>
   <body>
-    <div class="shell">
+    <div id="loginScreen" class="login-shell">
+      <section class="login-panel">
+        <p class="eyebrow">Operational Console</p>
+        <h1>Building Approval AI OS</h1>
+        <p class="lead">
+          Sign in to a tenant-scoped operator session to manage intake, triage the review queue, and update workflow state.
+        </p>
+
+        <form id="loginForm" class="login-form">
+          <label>
+            Operator email
+            <input name="email" type="email" placeholder="intake@sunrise-installers.demo" autocomplete="username" />
+          </label>
+          <label>
+            Access code
+            <input name="accessCode" type="password" placeholder="sunrise-intake" autocomplete="current-password" />
+          </label>
+          <div class="form-actions">
+            <button type="submit">Sign In</button>
+            <span id="authStatus" class="status"></span>
+          </div>
+        </form>
+
+        <div class="demo-credentials">
+          <div class="detail-card">
+            <h3>Sunrise Installer Demo</h3>
+            <p class="case-meta">Use the buttons to load seeded credentials.</p>
+            <div class="inline-actions">
+              <button type="button" class="ghost" id="demoLoginIntake">Load Intake Login</button>
+              <button type="button" class="ghost" id="demoLoginReview">Load Reviewer Login</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div id="appShell" class="shell" hidden>
       <aside class="sidebar">
         <div class="brand">
           <p class="eyebrow">Operator Console</p>
           <h1>Building Approval AI OS</h1>
         </div>
 
+        <div class="panel session-panel">
+          <div id="operatorSummary"></div>
+          <button id="logoutButton" class="ghost">Sign Out</button>
+        </div>
+
         <div class="panel">
           <div class="panel-header">
-            <h2>Cases</h2>
+            <h2>Queue</h2>
             <button id="refreshCases" class="ghost">Refresh</button>
           </div>
+
+          <div id="queueMetrics" class="metric-grid"></div>
+
+          <div class="queue-filters">
+            <label>
+              State
+              <select id="queueStateFilter">
+                <option value="">All</option>
+                <option value="needs-intake-clarification">needs-intake-clarification</option>
+                <option value="pending-documents">pending-documents</option>
+                <option value="professional-review-required">professional-review-required</option>
+                <option value="ready-for-submission-pack">ready-for-submission-pack</option>
+              </select>
+            </label>
+            <label>
+              Priority
+              <select id="queuePriorityFilter">
+                <option value="">All</option>
+                <option value="high">high</option>
+                <option value="medium">medium</option>
+                <option value="low">low</option>
+              </select>
+            </label>
+            <label>
+              Assignment
+              <select id="queueAssignmentFilter">
+                <option value="all">all</option>
+                <option value="mine">mine</option>
+                <option value="unassigned">unassigned</option>
+              </select>
+            </label>
+            <div class="inline-actions">
+              <button id="applyFilters" type="button">Apply</button>
+              <button id="resetFilters" type="button" class="ghost">Reset</button>
+            </div>
+            <span id="queueStatus" class="status"></span>
+          </div>
+
           <div id="caseList" class="case-list"></div>
         </div>
       </aside>
@@ -175,8 +254,8 @@
           <form id="reviewForm" class="review-form">
             <h3>Reviewer Update</h3>
             <label>
-              Assigned reviewer
-              <input name="assignedReviewer" placeholder="reviewer@team" />
+              Assign reviewer
+              <select id="assignedReviewerId" name="assignedReviewerId"></select>
             </label>
             <label>
               Workflow state

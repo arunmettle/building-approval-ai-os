@@ -3,6 +3,16 @@ import path from "node:path";
 
 const dataRoot = path.resolve(process.cwd(), "data", "app");
 const casesPath = path.join(dataRoot, "cases.json");
+const legacyTenantId = "tenant-sunrise-installers";
+
+function migrateLegacyCase(caseRecord) {
+  return {
+    ...caseRecord,
+    tenantId: caseRecord.tenantId || legacyTenantId,
+    createdBy: caseRecord.createdBy || null,
+    workflowHistory: Array.isArray(caseRecord.workflowHistory) ? caseRecord.workflowHistory : []
+  };
+}
 
 function ensureStore() {
   fs.mkdirSync(dataRoot, { recursive: true });
@@ -14,7 +24,7 @@ function ensureStore() {
 
 function readAllCases() {
   ensureStore();
-  return JSON.parse(fs.readFileSync(casesPath, "utf8"));
+  return JSON.parse(fs.readFileSync(casesPath, "utf8")).map(migrateLegacyCase);
 }
 
 function writeAllCases(cases) {
@@ -22,13 +32,14 @@ function writeAllCases(cases) {
   fs.writeFileSync(casesPath, JSON.stringify(cases, null, 2), "utf8");
 }
 
-export function listCases() {
+export function listCases(tenantId) {
   return readAllCases()
+    .filter((item) => !tenantId || item.tenantId === tenantId)
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 }
 
-export function getCaseById(caseId) {
-  return readAllCases().find((item) => item.caseId === caseId) || null;
+export function getCaseById(caseId, tenantId) {
+  return readAllCases().find((item) => item.caseId === caseId && (!tenantId || item.tenantId === tenantId)) || null;
 }
 
 export function saveCase(caseRecord) {

@@ -18,6 +18,7 @@ The system is designed to support professionals and applicants. It does not act 
 - `docs/` for execution plans, research operating model, and backlog
 - `src/research-loop/` for an automated research loop scaffold
 - `src/app/` for core domain contracts and product foundations
+- `src/auth/` for seeded operator identities and session handling
 - `src/server/` for the internal pilot HTTP app
 - `src/web/` for the operator console UI
 - `src/cases/` for persistent case storage and assessment orchestration
@@ -39,11 +40,21 @@ http://127.0.0.1:4010
 
 The app currently supports:
 
+- tenant-scoped operator sign-in
+- reviewer queue filters and workload metrics
 - create an assessment case from intake data
 - persist cases locally
 - reassess existing cases
 - review workflow states, blockers, and actions
 - assign reviewers and store reviewer notes
+- track workflow history per case
+
+Demo credentials:
+
+- `intake@sunrise-installers.demo` / `sunrise-intake`
+- `review@sunrise-installers.demo` / `sunrise-review`
+- `ops@qld-certifier.demo` / `certifier-ops`
+- `review@qld-certifier.demo` / `certifier-review`
 
 ## Research Loop
 

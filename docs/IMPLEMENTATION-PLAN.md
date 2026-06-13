@@ -64,6 +64,9 @@ Operationalize.
 - Pilot customer feedback loop
 - Pricing tests
 
+Status:
+An operational console MVP is now implemented with tenant-scoped operator sessions, persistent reviewer queue workflows, and a production-shaped internal API surface. Admin curation and evaluation analytics remain future extensions.
+
 ## Immediate Technical Decision
 
 The target production stack remains aligned to the blueprint: `ASP.NET Core`, `PostgreSQL`, object storage, background workers, and a React frontend.

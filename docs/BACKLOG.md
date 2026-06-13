@@ -4,8 +4,9 @@
 
 - Map installer workflow from lead intake to quote to approval handoff.
 - Expand parcel lookup coverage beyond local fixture profiles to live council/property adapters.
-- Add reviewer queue persistence and assignment semantics on top of workflow states.
+- Build admin curation workflows on top of extracted rules and evidence.
 - Start evidence-backed narrative explanation templates for more project types.
+- Add evaluation dashboards for queue throughput, reviewer corrections, and unsupported-claim rates.
 
 ## Next
 
@@ -18,7 +19,6 @@
 
 ## Later
 
-- Add tenant-aware B2B account model.
 - Add white-label council portal architecture.
 - Add customer-specific private document collections.
 - Add benchmark evaluation suite for extraction and recommendation quality.

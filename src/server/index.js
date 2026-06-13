@@ -1,7 +1,8 @@
-import http from "node:http";
 import fs from "node:fs";
+import http from "node:http";
 import path from "node:path";
-import { createCaseFromInput, getCaseDetail, listCaseSummaries, reassessCase, updateReviewerState } from "../cases/service.js";
+import { listQueue, createCaseFromInput, getCaseDetail, listCaseSummaries, reassessCase, updateReviewerState } from "../cases/service.js";
+import { getSessionContext, listTenantOperators, loginOperator, logoutOperator } from "../auth/service.js";
 
 const host = process.env.HOST || "127.0.0.1";
 const port = Number(process.env.PORT || 4010);
@@ -75,6 +76,41 @@ function caseIdFromPathname(pathname, suffix = "") {
   return suffix ? base.replace(new RegExp(`${suffix}$`), "") : base;
 }
 
+function getBearerToken(request) {
+  const header = request.headers.authorization || "";
+
+  if (!header.startsWith("Bearer ")) {
+    return null;
+  }
+
+  return header.slice("Bearer ".length).trim();
+}
+
+function authenticateApiRequest(request) {
+  const token = getBearerToken(request);
+  return getSessionContext(token);
+}
+
+function requireSession(request, response) {
+  const sessionContext = authenticateApiRequest(request);
+
+  if (!sessionContext) {
+    sendJson(response, 401, { error: "Authentication required." });
+    return null;
+  }
+
+  return sessionContext;
+}
+
+function filtersFromQuery(url) {
+  return {
+    state: url.searchParams.get("state") || null,
+    priority: url.searchParams.get("priority") || null,
+    projectType: url.searchParams.get("projectType") || null,
+    assignment: url.searchParams.get("assignment") || null
+  };
+}
+
 const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url || "/", `http://${host}:${port}`);
@@ -85,40 +121,91 @@ const server = http.createServer(async (request, response) => {
       return;
     }
 
-    if (request.method === "GET" && pathname === "/api/cases") {
-      sendJson(response, 200, { cases: listCaseSummaries() });
-      return;
-    }
-
-    if (request.method === "POST" && pathname === "/api/cases") {
+    if (request.method === "POST" && pathname === "/api/session/login") {
       const body = await readBody(request);
-      const caseRecord = createCaseFromInput(body.input || body);
-      sendJson(response, 201, { case: caseRecord });
+      const session = loginOperator(body.email, body.accessCode);
+      sendJson(response, 200, { session });
       return;
     }
 
-    if (request.method === "GET" && /^\/api\/cases\/[^/]+$/.test(pathname)) {
-      const caseRecord = getCaseDetail(caseIdFromPathname(pathname));
+    if (request.method === "GET" && pathname === "/api/session") {
+      const sessionContext = requireSession(request, response);
 
-      if (!caseRecord) {
-        sendJson(response, 404, { error: "Case not found." });
+      if (!sessionContext) {
         return;
       }
 
-      sendJson(response, 200, { case: caseRecord });
+      sendJson(response, 200, { session: sessionContext });
       return;
     }
 
-    if (request.method === "POST" && /^\/api\/cases\/[^/]+\/reassess$/.test(pathname)) {
-      const caseRecord = reassessCase(caseIdFromPathname(pathname, "/reassess"));
-      sendJson(response, 200, { case: caseRecord });
+    if (request.method === "POST" && pathname === "/api/session/logout") {
+      const sessionContext = requireSession(request, response);
+
+      if (!sessionContext) {
+        return;
+      }
+
+      logoutOperator(sessionContext.token);
+      sendJson(response, 200, { ok: true });
       return;
     }
 
-    if (request.method === "PATCH" && /^\/api\/cases\/[^/]+\/reviewer$/.test(pathname)) {
-      const body = await readBody(request);
-      const caseRecord = updateReviewerState(caseIdFromPathname(pathname, "/reviewer"), body);
-      sendJson(response, 200, { case: caseRecord });
+    if (pathname.startsWith("/api/")) {
+      const sessionContext = requireSession(request, response);
+
+      if (!sessionContext) {
+        return;
+      }
+
+      if (request.method === "GET" && pathname === "/api/operators") {
+        sendJson(response, 200, { operators: listTenantOperators(sessionContext.tenantId) });
+        return;
+      }
+
+      if (request.method === "GET" && pathname === "/api/queue") {
+        sendJson(response, 200, listQueue(sessionContext, filtersFromQuery(url)));
+        return;
+      }
+
+      if (request.method === "GET" && pathname === "/api/cases") {
+        sendJson(response, 200, { cases: listCaseSummaries(sessionContext) });
+        return;
+      }
+
+      if (request.method === "POST" && pathname === "/api/cases") {
+        const body = await readBody(request);
+        const caseRecord = createCaseFromInput(body.input || body, sessionContext);
+        sendJson(response, 201, { case: caseRecord });
+        return;
+      }
+
+      if (request.method === "GET" && /^\/api\/cases\/[^/]+$/.test(pathname)) {
+        const caseRecord = getCaseDetail(caseIdFromPathname(pathname), sessionContext);
+
+        if (!caseRecord) {
+          sendJson(response, 404, { error: "Case not found." });
+          return;
+        }
+
+        sendJson(response, 200, { case: caseRecord });
+        return;
+      }
+
+      if (request.method === "POST" && /^\/api\/cases\/[^/]+\/reassess$/.test(pathname)) {
+        const caseRecord = reassessCase(caseIdFromPathname(pathname, "/reassess"), sessionContext);
+        sendJson(response, 200, { case: caseRecord });
+        return;
+      }
+
+      if (request.method === "PATCH" && /^\/api\/cases\/[^/]+\/reviewer$/.test(pathname)) {
+        const body = await readBody(request);
+        const caseRecord = updateReviewerState(caseIdFromPathname(pathname, "/reviewer"), body, sessionContext);
+        sendJson(response, 200, { case: caseRecord });
+        return;
+      }
+
+      sendJson(response, 404, { error: "Route not found." });
       return;
     }
 
