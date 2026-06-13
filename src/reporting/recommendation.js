@@ -26,6 +26,12 @@ function deriveRiskReasons(assessment) {
     reasons.push("Some required inputs are unknown, which limits confidence.");
   }
 
+  if (assessment.propertyProfile?.overlays?.length) {
+    reasons.push(
+      `Resolved property overlays may affect the pathway: ${assessment.propertyProfile.overlays.join(", ")}.`
+    );
+  }
+
   if (assessment.matchedRules.some((rule) => rule.outcome.includes("approval-required"))) {
     reasons.push("One or more jurisdiction rules indicate an approval or certifier pathway is likely required.");
   }
@@ -140,9 +146,10 @@ function assertContract(recommendation) {
 }
 
 export function buildRecommendation(input, assessment) {
-  const requiredDocuments = resolveRequiredDocuments(input, assessment);
-  const documentEvidence = resolveDocumentEvidence(input, assessment);
-  const retrievedContext = retrieveRelevantChunks(input, assessment);
+  const effectiveInput = assessment.input || input;
+  const requiredDocuments = resolveRequiredDocuments(effectiveInput, assessment);
+  const documentEvidence = resolveDocumentEvidence(effectiveInput, assessment);
+  const retrievedContext = retrieveRelevantChunks(effectiveInput, assessment);
   const matchedRuleCitations = buildCitations(assessment.matchedRules);
   const citations = [
     ...matchedRuleCitations,
@@ -152,7 +159,7 @@ export function buildRecommendation(input, assessment) {
       [...matchedRuleCitations, ...buildDocumentEvidenceCitations(documentEvidence, matchedRuleCitations)]
     )
   ];
-  const explanation = buildExplanation(input, assessment, {
+  const explanation = buildExplanation(effectiveInput, assessment, {
     citations,
     requiredDocuments,
     retrievedContext,
@@ -167,6 +174,17 @@ export function buildRecommendation(input, assessment) {
     pathwayLabel: assessment.pathwayLabel,
     riskRating: assessment.riskRating,
     riskReasons: deriveRiskReasons(assessment),
+    propertyContext: assessment.propertyProfile
+      ? {
+          propertyProfileId: assessment.propertyProfile.propertyProfileId,
+          address: assessment.propertyProfile.address,
+          lotPlan: assessment.propertyProfile.lotPlan || null,
+          zone: assessment.propertyProfile.zone,
+          overlays: assessment.propertyProfile.overlays,
+          currentUse: assessment.propertyProfile.currentUse || null,
+          sources: assessment.propertyProfile.sources || []
+        }
+      : null,
     requiredDocuments,
     unknowns: assessment.unknowns,
     professionalReviewRecommended: assessment.professionalReviewRecommended,
@@ -176,7 +194,7 @@ export function buildRecommendation(input, assessment) {
     explanation,
     narrativeClaims: explanation.sentences,
     narrativeValidation,
-    assumptions: deriveAssumptions(input, assessment),
+    assumptions: deriveAssumptions(effectiveInput, assessment),
     matchedRuleIds: assessment.matchedRules.map((rule) => rule.ruleId)
   };
 

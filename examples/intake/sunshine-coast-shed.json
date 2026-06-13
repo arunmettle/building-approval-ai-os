@@ -1,4 +1,7 @@
 {
+  "propertyProfileId": "sc-shed-demo-001",
+  "propertyLookupKey": "sunshine-coast-demo-shed-lot",
+  "address": "12 Coastal Court, Bokarina QLD 4575",
   "jurisdictionId": "au-qld-sunshine-coast",
   "projectType": "shed",
   "planAreaSqm": 9,
@@ -12,8 +15,8 @@
   "distanceToFrontBoundaryM": 6,
   "distanceToSideBoundaryM": 2,
   "distanceToRearBoundaryM": 2,
-  "zoneKnown": true,
-  "overlaysKnown": true,
+  "zoneKnown": null,
+  "overlaysKnown": null,
   "nearPoolEnclosure": false,
   "affectsExistingStructure": false
 }

@@ -10,8 +10,9 @@ function ensureDir(dirPath) {
 
 export function generateReportFromInput(input, outputDir) {
   const assessment = assessProject(input);
-  const recommendation = buildRecommendation(input, assessment);
-  const markdown = buildMarkdownReport(input, assessment, recommendation);
+  const effectiveInput = assessment.input || input;
+  const recommendation = buildRecommendation(effectiveInput, assessment);
+  const markdown = buildMarkdownReport(effectiveInput, assessment, recommendation);
   const stamp = new Date().toISOString().replace(/[:.]/g, "-");
 
   ensureDir(outputDir);
@@ -21,7 +22,7 @@ export function generateReportFromInput(input, outputDir) {
 
   fs.writeFileSync(
     jsonPath,
-    JSON.stringify({ input, assessment, recommendation }, null, 2),
+    JSON.stringify({ input: effectiveInput, originalInput: input, assessment, recommendation }, null, 2),
     "utf8"
   );
   fs.writeFileSync(mdPath, markdown, "utf8");

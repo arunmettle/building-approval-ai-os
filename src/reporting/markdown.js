@@ -49,6 +49,18 @@ export function buildMarkdownReport(input, assessment, recommendation) {
     JSON.stringify(input, null, 2),
     "```",
     "",
+    "## Resolved Property Context",
+    recommendation.propertyContext
+      ? [
+          `- Property profile: ${recommendation.propertyContext.propertyProfileId}`,
+          `- Address: ${recommendation.propertyContext.address}`,
+          `- Lot/plan: ${recommendation.propertyContext.lotPlan || "Not captured"}`,
+          `- Zone: ${recommendation.propertyContext.zone || "Unknown"}`,
+          `- Overlays: ${recommendation.propertyContext.overlays?.length ? recommendation.propertyContext.overlays.join(", ") : "None captured"}`,
+          `- Current use: ${recommendation.propertyContext.currentUse || "Unknown"}`
+        ].join("\n")
+      : "- No property profile resolved.",
+    "",
     "## Risk Reasons",
     formatList(recommendation.riskReasons),
     "",

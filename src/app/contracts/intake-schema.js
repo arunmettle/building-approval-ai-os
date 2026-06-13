@@ -15,6 +15,8 @@ export const initialIntakeSchema = {
     "overlaysKnown"
   ],
   optionalFields: [
+    "propertyProfileId",
+    "propertyLookupKey",
     "lotPlan",
     "coordinates",
     "localAuthorityOverride",
