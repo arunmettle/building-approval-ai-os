@@ -3,7 +3,7 @@ import path from "node:path";
 import { readLatestManifest } from "../aggregator/manifest.js";
 import { chunkText } from "./chunker.js";
 import { tokenize } from "./tokenize.js";
-import { cleanRetrievedText, isLowSignalChunk } from "./clean-text.js";
+import { cleanRetrievedText, isLowSignalChunk, trimToRelevantStart } from "./clean-text.js";
 
 function ensureDir(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
@@ -54,7 +54,10 @@ async function main() {
 
   for (const source of manifest.results.filter((entry) => entry.ok && entry.extractedTextPath)) {
     process.stdout.write(`Chunking ${source.sourceId}\n`);
-    const text = cleanRetrievedText(readText(source.extractedTextPath));
+    const text = trimToRelevantStart(
+      cleanRetrievedText(readText(source.extractedTextPath)),
+      source.sourceId
+    );
     const sourceChunks = chunkText(text);
 
     sourceChunks.forEach((chunk, index) => {
