@@ -19,6 +19,72 @@ const sourceTypeWeights = {
   "open-data-portal": -2
 };
 
+const projectTypeTerms = {
+  shed: ["shed", "outbuilding", "class 10a", "garage", "carport"],
+  deck: ["deck", "decking"],
+  pergola: ["pergola", "gazebo"],
+  patio: ["patio", "verandah", "veranda", "awning"],
+  pool: ["pool", "swimming pool", "spa"],
+  retaining_wall: ["retaining wall"],
+  extension: ["extension", "addition"],
+  internal_renovation: ["internal renovation", "alteration", "fit-out"],
+  garage_carport: ["garage", "carport"],
+  granny_flat: ["granny flat", "secondary dwelling", "accessory dwelling"]
+};
+
+function normalizeProjectType(projectType) {
+  return String(projectType || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[\s/-]+/g, "_");
+}
+
+function getProjectTerms(projectType) {
+  const normalized = normalizeProjectType(projectType);
+  return projectTypeTerms[normalized] || [String(projectType || "").toLowerCase()].filter(Boolean);
+}
+
+function countTermMatches(text, terms) {
+  let matches = 0;
+
+  for (const term of terms) {
+    if (term && text.includes(term)) {
+      matches += 1;
+    }
+  }
+
+  return matches;
+}
+
+function projectTypeScore(chunk, input) {
+  const projectType = input.projectType;
+
+  if (!projectType) {
+    return 0;
+  }
+
+  const lowerText = chunk.text.toLowerCase();
+  const activeTerms = getProjectTerms(projectType);
+  const activeMatches = countTermMatches(lowerText, activeTerms);
+  let score = activeMatches * 4;
+
+  for (const [candidateType, candidateTerms] of Object.entries(projectTypeTerms)) {
+    if (candidateType === normalizeProjectType(projectType)) {
+      continue;
+    }
+
+    const conflictingMatches = countTermMatches(lowerText, candidateTerms);
+
+    if (conflictingMatches > 0 && activeMatches === 0) {
+      score -= conflictingMatches * 5;
+    } else if (conflictingMatches > 0) {
+      score -= conflictingMatches * 2;
+    }
+  }
+
+  return score;
+}
+
 function sourceQualityWeight(chunk) {
   let score = sourceTypeWeights[chunk.sourceType] || 0;
 
@@ -86,6 +152,7 @@ function scoreChunk(chunk, queryTokens, input) {
     score += 2;
   }
 
+  score += projectTypeScore(chunk, input);
   score += sourceQualityWeight(chunk);
 
   for (const keyword of ["approval", "permit", "setback", "overlay", "site report", "planning"]) {
