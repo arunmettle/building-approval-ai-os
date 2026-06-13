@@ -3,7 +3,12 @@ import path from "node:path";
 import { readLatestManifest } from "../aggregator/manifest.js";
 import { chunkText } from "./chunker.js";
 import { tokenize } from "./tokenize.js";
-import { cleanRetrievedText, isLowSignalChunk, trimToRelevantStart } from "./clean-text.js";
+import {
+  cleanRetrievedText,
+  isLowSignalChunk,
+  sanitizeChunkText,
+  trimToRelevantStart
+} from "./clean-text.js";
 
 function ensureDir(dirPath) {
   fs.mkdirSync(dirPath, { recursive: true });
@@ -61,11 +66,13 @@ async function main() {
     const sourceChunks = chunkText(text);
 
     sourceChunks.forEach((chunk, index) => {
-      if (isLowSignalChunk(chunk.text)) {
+      const sanitizedText = sanitizeChunkText(chunk.text);
+
+      if (isLowSignalChunk(sanitizedText)) {
         return;
       }
 
-      chunks.push(buildChunkRecord(source, chunk, index));
+      chunks.push(buildChunkRecord(source, { ...chunk, text: sanitizedText }, index));
     });
   }
 
