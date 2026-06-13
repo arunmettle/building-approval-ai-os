@@ -9,6 +9,7 @@ export const recommendationContract = {
     "requiredDocuments",
     "unknowns",
     "professionalReviewRecommended",
+    "reviewerWorkflow",
     "citations",
     "narrative",
     "explanation",

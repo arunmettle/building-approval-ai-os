@@ -3,6 +3,7 @@ import { resolveDocumentEvidence, resolveRequiredDocuments } from "./document-re
 import { retrieveRelevantChunks } from "../retrieval/search.js";
 import { buildExplanation } from "./explanation.js";
 import { validateNarrativeClaims } from "./claim-validator.js";
+import { buildReviewerWorkflow } from "../review/workflow.js";
 
 function uniqueEvidenceFromMatches(matches) {
   const bySourceClaim = new Map();
@@ -167,6 +168,7 @@ export function buildRecommendation(input, assessment) {
     professionalReviewRecommended: assessment.professionalReviewRecommended
   });
   const narrativeValidation = validateNarrativeClaims(explanation.sentences, citations);
+  const reviewerWorkflow = buildReviewerWorkflow(effectiveInput, assessment, requiredDocuments);
   const recommendation = {
     jurisdiction: assessment.jurisdictionId,
     effectiveDate: new Date().toISOString().slice(0, 10),
@@ -188,6 +190,7 @@ export function buildRecommendation(input, assessment) {
     requiredDocuments,
     unknowns: assessment.unknowns,
     professionalReviewRecommended: assessment.professionalReviewRecommended,
+    reviewerWorkflow,
     citations,
     retrievedContext,
     narrative: explanation.paragraphs,

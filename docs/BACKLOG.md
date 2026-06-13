@@ -2,10 +2,10 @@
 
 ## Now
 
-- Improve retrieval passage quality for menu-heavy guidance pages.
-- Tie document requirements more tightly to matched pathway context.
-- Start evidence-backed narrative explanation templates for more project types.
 - Map installer workflow from lead intake to quote to approval handoff.
+- Expand parcel lookup coverage beyond local fixture profiles to live council/property adapters.
+- Add reviewer queue persistence and assignment semantics on top of workflow states.
+- Start evidence-backed narrative explanation templates for more project types.
 
 ## Next
 

@@ -41,7 +41,7 @@ Build the assessor workflow.
 - Submission-readiness report
 
 Status:
-Current repository work has now entered this phase. Data collation is considered sufficient MVP infrastructure and is no longer the main blocker.
+Core Phase 3 capabilities are now implemented in MVP form. Data collation is considered sufficient MVP infrastructure and is no longer the main blocker.
 
 ## Phase 4
 
@@ -53,7 +53,7 @@ Add AI synthesis safely.
 - Reviewer escalation logic
 
 Status:
-Deterministic evidence-backed narrative generation and claim validation are now implemented in MVP form. Free-form LLM synthesis remains a future step.
+Deterministic evidence-backed narrative generation, claim validation, and reviewer escalation workflow states are now implemented in MVP form. Free-form LLM synthesis remains a future step.
 
 ## Phase 5
 

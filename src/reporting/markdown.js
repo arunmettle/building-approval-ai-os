@@ -19,6 +19,19 @@ function formatClaimList(claims) {
     .join("\n");
 }
 
+function formatReviewerWorkflow(workflow) {
+  if (!workflow) {
+    return "- No reviewer workflow generated.";
+  }
+
+  return [
+    `- State: ${workflow.state}`,
+    `- Priority: ${workflow.priority}`,
+    `- Parcel context resolved: ${workflow.parcelContextResolved ? "Yes" : "No"}`,
+    `- Missing documents: ${workflow.missingDocuments.length ? workflow.missingDocuments.join(", ") : "None"}`
+  ].join("\n");
+}
+
 export function buildMarkdownReport(input, assessment, recommendation) {
   const citations = recommendation.citations
     .map(
@@ -79,6 +92,18 @@ export function buildMarkdownReport(input, assessment, recommendation) {
     "",
     "## Documents Likely Required",
     formatList(recommendation.requiredDocuments),
+    "",
+    "## Reviewer Workflow",
+    formatReviewerWorkflow(recommendation.reviewerWorkflow),
+    "",
+    "## Reviewer Actions",
+    formatList(recommendation.reviewerWorkflow?.requiredActions || []),
+    "",
+    "## Reviewer Blockers",
+    formatList(recommendation.reviewerWorkflow?.blockingItems || []),
+    "",
+    "## Escalation Reasons",
+    formatList(recommendation.reviewerWorkflow?.escalationReasons || []),
     "",
     "## Unknowns",
     formatList(recommendation.unknowns),
