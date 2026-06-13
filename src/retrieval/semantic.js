@@ -1,96 +1,70 @@
 import fs from "node:fs";
 import path from "node:path";
 import { tokenize } from "./tokenize.js";
+import {
+  applyIdfWeights,
+  buildSemanticFeatureMapFromTokens,
+  cosineSimilarity,
+  deserializeFeatureMap,
+  normalizeFeatureMap
+} from "./semantic-profile.js";
 
-function readChunks() {
-  const chunksPath = path.resolve(process.cwd(), "data", "retrieval", "chunks.json");
+function readSemanticIndex() {
+  const semanticIndexPath = path.resolve(process.cwd(), "data", "retrieval", "semantic-index.json");
 
-  if (!fs.existsSync(chunksPath)) {
-    throw new Error("No retrieval chunks found. Run `npm run retrieval:build` first.");
+  if (!fs.existsSync(semanticIndexPath)) {
+    throw new Error("No semantic retrieval index found. Run `npm run retrieval:build` first.");
   }
 
-  return JSON.parse(fs.readFileSync(chunksPath, "utf8"));
-}
-
-function expandToken(token) {
-  const expansions = {
-    pergola: ["patio", "verandah", "gazebo", "shade"],
-    patio: ["pergola", "verandah", "deck", "roofed"],
-    deck: ["balcony", "patio", "outdoor"],
-    shed: ["outbuilding", "garage", "carport", "class", "10a"],
-    approval: ["permit", "application", "certifier"],
-    overlay: ["hazard", "character", "flood", "heritage", "bushfire"],
-    setback: ["boundary", "frontage", "rear", "side", "siting"],
-    planning: ["scheme", "zone", "code"],
-    report: ["site", "property"],
-    certifier: ["building", "private", "approval"]
-  };
-
-  return [token, ...(expansions[token] || [])];
-}
-
-function vectorize(tokens) {
-  const vector = new Map();
-
-  for (const token of tokens) {
-    vector.set(token, (vector.get(token) || 0) + 1);
-  }
-
-  return vector;
-}
-
-function cosineSimilarity(a, b) {
-  let dot = 0;
-  let aNorm = 0;
-  let bNorm = 0;
-
-  for (const value of a.values()) {
-    aNorm += value * value;
-  }
-
-  for (const value of b.values()) {
-    bNorm += value * value;
-  }
-
-  for (const [key, value] of a.entries()) {
-    if (b.has(key)) {
-      dot += value * b.get(key);
-    }
-  }
-
-  if (aNorm === 0 || bNorm === 0) {
-    return 0;
-  }
-
-  return dot / (Math.sqrt(aNorm) * Math.sqrt(bNorm));
+  return JSON.parse(fs.readFileSync(semanticIndexPath, "utf8"));
 }
 
 function buildSemanticQueryTokens(input, assessment) {
-  const baseTokens = tokenize(
-    [
-      input.projectType,
-      "building approval permit planning scheme",
-      "setback boundary overlay code",
-      ...assessment.unknowns
-    ]
-      .filter(Boolean)
-      .join(" ")
-  );
+  const parts = [
+    input.projectType,
+    "building approval permit planning scheme",
+    "setback boundary overlay code certifier site report",
+    ...assessment.unknowns
+  ];
 
-  return [...new Set(baseTokens.flatMap(expandToken))];
+  if (input.zone) {
+    parts.push(input.zone);
+  }
+
+  if (input.overlaysKnown === false) {
+    parts.push("overlay site report mapping");
+  }
+
+  if (input.boundarySetbacksCompliant === false) {
+    parts.push("setback variation boundary siting");
+  }
+
+  return tokenize(parts.filter(Boolean).join(" "));
+}
+
+function buildQueryVector(input, assessment, semanticIndex) {
+  const rawFeatureMap = buildSemanticFeatureMapFromTokens(buildSemanticQueryTokens(input, assessment), 1.2);
+  const idfMap = deserializeFeatureMap(semanticIndex.idf);
+
+  return normalizeFeatureMap(applyIdfWeights(rawFeatureMap, idfMap));
 }
 
 export function semanticRetrieve(input, assessment, limit = 10) {
-  const chunks = readChunks();
-  const queryVector = vectorize(buildSemanticQueryTokens(input, assessment));
+  const semanticIndex = readSemanticIndex();
+  const queryVector = buildQueryVector(input, assessment, semanticIndex);
 
-  return chunks
-    .map((chunk) => {
-      const chunkVector = vectorize(tokenize(chunk.text));
-      const semanticScore = cosineSimilarity(queryVector, chunkVector);
-      return { ...chunk, semanticScore };
+  return semanticIndex.profiles
+    .map((profile) => {
+      const semanticScore = cosineSimilarity(queryVector, deserializeFeatureMap(profile.vector));
+      return {
+        chunkId: profile.chunkId,
+        sourceId: profile.sourceId,
+        jurisdictionId: profile.jurisdictionId,
+        sourceType: profile.sourceType,
+        semanticScore
+      };
     })
-    .filter((chunk) => chunk.semanticScore > 0)
+    .filter((profile) => profile.semanticScore > 0)
     .sort((a, b) => b.semanticScore - a.semanticScore)
     .slice(0, limit);
 }

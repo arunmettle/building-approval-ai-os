@@ -20,18 +20,35 @@ This retrieval layer:
 
 ## Current Version
 
-The current version is lexical rather than embedding-based.
+The current version is a local hybrid retrieval layer.
 
 - chunking is deterministic
-- scoring is term-based with jurisdiction and project-type boosts
+- lexical scoring still drives exact-term precision
+- a prebuilt semantic index adds weighted concept matching
 - source-aware ranking prefers guidance and rule-bearing pages over portals and datasets
-- retrieval is transparent and easy to debug
+- jurisdiction and project-type weighting still constrain results toward the relevant authority and structure type
+
+## Semantic Index
+
+`npm run retrieval:build` now produces:
+
+- `data/retrieval/chunks.json`
+- `data/retrieval/latest-manifest.json`
+- `data/retrieval/semantic-index.json`
+
+The semantic index stores:
+
+- weighted sparse vectors per chunk
+- inverse-document-frequency weights across the corpus
+- vocabulary size for the current retrieval build
+
+This is still local and deterministic. It does not require an external vector database or model provider.
 
 ## Next Version
 
-Later this can be upgraded with:
+Later this can still be upgraded with:
 
-- semantic embeddings
-- vector search
-- hybrid lexical plus vector ranking
+- provider-based embeddings
+- dedicated vector search
+- stronger reranking
 - LLM context assembly

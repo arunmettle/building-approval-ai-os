@@ -4,6 +4,13 @@ import { readLatestManifest } from "../aggregator/manifest.js";
 import { chunkText } from "./chunker.js";
 import { tokenize } from "./tokenize.js";
 import {
+  applyInverseDocumentFrequency,
+  buildSemanticFeatureMapFromText,
+  computeDocumentFrequency,
+  normalizeFeatureMap,
+  serializeFeatureMap
+} from "./semantic-profile.js";
+import {
   cleanRetrievedText,
   isLowSignalChunk,
   sanitizeChunkText,
@@ -84,10 +91,46 @@ async function main() {
     chunks
   };
 
+  const semanticFeatureMaps = chunks.map((chunk) => buildSemanticFeatureMapFromText(chunk.text));
+  const documentFrequency = computeDocumentFrequency(semanticFeatureMaps);
+  const semanticProfiles = chunks.map((chunk, index) => ({
+    chunkId: chunk.chunkId,
+    sourceId: chunk.sourceId,
+    jurisdictionId: chunk.jurisdictionId,
+    sourceType: chunk.sourceType,
+    vector: serializeFeatureMap(
+      normalizeFeatureMap(
+        applyInverseDocumentFrequency(
+          semanticFeatureMaps[index],
+          documentFrequency,
+          chunks.length
+        )
+      )
+    )
+  }));
+  const semanticIndex = {
+    runAt: payload.runAt,
+    sourceRunAt: payload.sourceRunAt,
+    totalChunks: chunks.length,
+    vocabularySize: documentFrequency.size,
+    idf: serializeFeatureMap(
+      new Map(
+        [...documentFrequency.entries()].map(([key, df]) => [
+          key,
+          Math.log(1 + chunks.length / df)
+        ])
+      )
+    ),
+    profiles: semanticProfiles
+  };
+
   fs.writeFileSync(path.join(outputRoot, "chunks.json"), JSON.stringify(chunks, null, 2), "utf8");
   fs.writeFileSync(path.join(outputRoot, "latest-manifest.json"), JSON.stringify(payload, null, 2), "utf8");
+  fs.writeFileSync(path.join(outputRoot, "semantic-index.json"), JSON.stringify(semanticIndex, null, 2), "utf8");
 
-  process.stdout.write(`Retrieval index built: ${payload.totalChunks} chunks\n`);
+  process.stdout.write(
+    `Retrieval index built: ${payload.totalChunks} chunks | semantic vocabulary: ${semanticIndex.vocabularySize}\n`
+  );
 }
 
 main().catch((error) => {
