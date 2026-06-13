@@ -29,11 +29,19 @@ const state = {
   queueItems: [],
   queueMetrics: null,
   operators: [],
+  dashboard: null,
+  curationItems: [],
+  curationMetrics: null,
   selectedCaseId: null,
+  selectedCurationItemId: null,
   queueFilters: {
     state: "",
     priority: "",
     assignment: "all"
+  },
+  curationFilters: {
+    status: "",
+    type: ""
   }
 };
 
@@ -45,16 +53,25 @@ const formStatusElement = document.querySelector("#formStatus");
 const reviewStatusElement = document.querySelector("#reviewStatus");
 const authStatusElement = document.querySelector("#authStatus");
 const queueStatusElement = document.querySelector("#queueStatus");
+const curationStatusElement = document.querySelector("#curationStatus");
 const caseForm = document.querySelector("#caseForm");
 const reviewForm = document.querySelector("#reviewForm");
 const loginForm = document.querySelector("#loginForm");
+const curationForm = document.querySelector("#curationForm");
 const reassessButton = document.querySelector("#reassessCase");
 const saveReviewButton = document.querySelector("#saveReview");
+const saveCurationButton = document.querySelector("#saveCuration");
 const operatorSummaryElement = document.querySelector("#operatorSummary");
 const queueMetricsElement = document.querySelector("#queueMetrics");
+const dashboardMetricsElement = document.querySelector("#dashboardMetrics");
+const curationMetricsElement = document.querySelector("#curationMetrics");
+const curationListElement = document.querySelector("#curationList");
+const curationDetailElement = document.querySelector("#curationDetail");
 const queueStateFilter = document.querySelector("#queueStateFilter");
 const queuePriorityFilter = document.querySelector("#queuePriorityFilter");
 const queueAssignmentFilter = document.querySelector("#queueAssignmentFilter");
+const curationStatusFilter = document.querySelector("#curationStatusFilter");
+const curationTypeFilter = document.querySelector("#curationTypeFilter");
 const reviewerSelect = document.querySelector("#assignedReviewerId");
 
 function parseMaybeBoolean(value) {
@@ -122,34 +139,58 @@ function renderSession() {
   `;
 }
 
-function renderQueueMetrics() {
-  if (!state.queueMetrics) {
-    queueMetricsElement.innerHTML = `<p class="case-meta">No queue metrics.</p>`;
+function renderMetricCards(target, metrics, config) {
+  if (!metrics) {
+    target.innerHTML = `<p class="case-meta">No metrics available.</p>`;
     return;
   }
 
-  queueMetricsElement.innerHTML = `
-    <div class="metric-card">
-      <strong>${state.queueMetrics.total}</strong>
-      <span>Total cases</span>
-    </div>
-    <div class="metric-card">
-      <strong>${state.queueMetrics.unassigned}</strong>
-      <span>Unassigned</span>
-    </div>
-    <div class="metric-card">
-      <strong>${state.queueMetrics.highPriority}</strong>
-      <span>High priority</span>
-    </div>
-    <div class="metric-card">
-      <strong>${state.queueMetrics.pendingDocuments}</strong>
-      <span>Pending docs</span>
-    </div>
-    <div class="metric-card">
-      <strong>${state.queueMetrics.professionalReviewRequired}</strong>
-      <span>Professional review</span>
-    </div>
-  `;
+  target.innerHTML = config
+    .map(({ key, label }) => `<div class="metric-card"><strong>${metrics[key] ?? 0}</strong><span>${label}</span></div>`)
+    .join("");
+}
+
+function renderQueueMetrics() {
+  renderMetricCards(queueMetricsElement, state.queueMetrics, [
+    { key: "total", label: "Total cases" },
+    { key: "unassigned", label: "Unassigned" },
+    { key: "highPriority", label: "High priority" },
+    { key: "pendingDocuments", label: "Pending docs" },
+    { key: "professionalReviewRequired", label: "Professional review" }
+  ]);
+}
+
+function renderDashboard() {
+  const metrics = state.dashboard;
+
+  if (!metrics) {
+    dashboardMetricsElement.innerHTML = `<p class="case-meta">No dashboard data yet.</p>`;
+    return;
+  }
+
+  renderMetricCards(dashboardMetricsElement, {
+    totalCases: metrics.caseMetrics.totalCases,
+    assignedCases: metrics.caseMetrics.assignedCases,
+    reviewerNotes: metrics.caseMetrics.reviewerNotes,
+    averageCitationsPerCase: metrics.qualityMetrics.averageCitationsPerCase,
+    unsupportedClaims: metrics.qualityMetrics.unsupportedClaims,
+    corrected: metrics.curationMetrics.corrected
+  }, [
+    { key: "totalCases", label: "Tenant cases" },
+    { key: "assignedCases", label: "Assigned cases" },
+    { key: "reviewerNotes", label: "Reviewer notes" },
+    { key: "averageCitationsPerCase", label: "Avg citations/case" },
+    { key: "unsupportedClaims", label: "Unsupported claims" },
+    { key: "corrected", label: "Corrections made" }
+  ]);
+
+  renderMetricCards(curationMetricsElement, state.curationMetrics, [
+    { key: "total", label: "Curation items" },
+    { key: "open", label: "Open" },
+    { key: "accepted", label: "Accepted" },
+    { key: "corrected", label: "Corrected" },
+    { key: "dismissed", label: "Dismissed" }
+  ]);
 }
 
 function renderCaseList() {
@@ -174,6 +215,29 @@ function renderCaseList() {
     `;
     element.addEventListener("click", () => selectCase(item.caseId));
     caseListElement.appendChild(element);
+  }
+}
+
+function renderCurationList() {
+  curationListElement.innerHTML = "";
+
+  if (!state.curationItems.length) {
+    curationListElement.innerHTML = `<p class="case-meta">No curation items match the filters.</p>`;
+    return;
+  }
+
+  for (const item of state.curationItems) {
+    const element = document.createElement("button");
+    element.type = "button";
+    element.className = `case-card${state.selectedCurationItemId === item.itemId ? " active" : ""}`;
+    element.innerHTML = `
+      <h3>${item.type}</h3>
+      <p class="case-meta">${item.title}</p>
+      <p class="case-meta">Status: ${item.reviewStatus}</p>
+      <p class="case-meta">Cases: ${item.linkedCaseIds.length}</p>
+    `;
+    element.addEventListener("click", () => selectCurationItem(item.itemId));
+    curationListElement.appendChild(element);
   }
 }
 
@@ -299,6 +363,56 @@ function renderCaseDetail(caseRecord) {
   reviewForm.elements.note.value = "";
 }
 
+function renderCurationDetail(item) {
+  if (!item) {
+    curationDetailElement.className = "case-detail empty";
+    curationDetailElement.textContent = "Select a curation item to review evidence and record a disposition.";
+    saveCurationButton.disabled = true;
+    return;
+  }
+
+  saveCurationButton.disabled = false;
+  curationDetailElement.className = "case-detail";
+  curationDetailElement.innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-card">
+        <h4>Item</h4>
+        <p><strong>Type:</strong> ${item.type}</p>
+        <p><strong>Title:</strong> ${item.title}</p>
+        <p><strong>Status:</strong> ${item.reviewStatus}</p>
+      </div>
+      <div class="detail-card">
+        <h4>Evidence</h4>
+        <p><strong>Source:</strong> ${item.sourceName || "Unknown"}</p>
+        <p><strong>Section:</strong> ${item.evidence?.sectionRef || "Unknown"}</p>
+        <p><strong>Confidence:</strong> ${item.evidence?.confidence ?? "Unknown"}</p>
+      </div>
+      <div class="detail-card">
+        <h4>Linked Cases</h4>
+        ${listMarkup(item.linkedCaseIds)}
+      </div>
+    </div>
+    <div class="detail-card">
+      <h4>Description</h4>
+      <p>${item.description || "No description."}</p>
+      <p class="case-meta">${item.sourceUrl || ""}</p>
+    </div>
+    <div class="detail-card">
+      <h4>Prior Review</h4>
+      <p><strong>Disposition:</strong> ${item.reviewDisposition || "Not reviewed"}</p>
+      <p><strong>Reviewed at:</strong> ${formatDate(item.reviewedAt)}</p>
+      <p><strong>Reviewed by:</strong> ${item.reviewedBy?.displayName || "Unknown"}</p>
+      <p><strong>Note:</strong> ${item.reviewNote || "None"}</p>
+      <p><strong>Corrected value:</strong> ${item.correctedValue || "None"}</p>
+    </div>
+  `;
+
+  curationForm.elements.status.value = item.reviewStatus === "open" ? "reviewed" : item.reviewStatus;
+  curationForm.elements.disposition.value = item.reviewDisposition || "accepted";
+  curationForm.elements.correctedValue.value = item.correctedValue || "";
+  curationForm.elements.note.value = item.reviewNote || "";
+}
+
 async function fetchJson(url, options = {}) {
   const headers = new Headers(options.headers || {});
   const token = getToken();
@@ -362,21 +476,27 @@ async function login(email, accessCode) {
 async function logout() {
   try {
     await fetchJson("/api/session/logout", { method: "POST" });
-  } catch (error) {
-    // Ignore logout errors during local session cleanup.
+  } catch {
+    // ignore local cleanup failure
   }
 
   setToken(null);
   state.session = null;
-  state.selectedCaseId = null;
   state.cases = [];
   state.queueItems = [];
   state.operators = [];
-  state.queueMetrics = null;
+  state.dashboard = null;
+  state.curationItems = [];
+  state.curationMetrics = null;
+  state.selectedCaseId = null;
+  state.selectedCurationItemId = null;
   renderSession();
   renderQueueMetrics();
+  renderDashboard();
   renderCaseList();
+  renderCurationList();
   renderCaseDetail(null);
+  renderCurationDetail(null);
 }
 
 async function loadOperators() {
@@ -392,15 +512,22 @@ async function loadCases() {
 
 function queueQuery() {
   const params = new URLSearchParams();
-
   for (const [key, value] of Object.entries(state.queueFilters)) {
     if (value && value !== "all") {
       params.set(key, value);
     }
   }
+  return params.toString() ? `?${params.toString()}` : "";
+}
 
-  const suffix = params.toString();
-  return suffix ? `?${suffix}` : "";
+function curationQuery() {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(state.curationFilters)) {
+    if (value) {
+      params.set(key, value);
+    }
+  }
+  return params.toString() ? `?${params.toString()}` : "";
 }
 
 async function loadQueue() {
@@ -409,14 +536,19 @@ async function loadQueue() {
   state.queueMetrics = payload.metrics;
   renderQueueMetrics();
   renderCaseList();
+}
 
-  if (state.selectedCaseId && !state.queueItems.find((item) => item.caseId === state.selectedCaseId)) {
-    const matchingCase = state.cases.find((item) => item.caseId === state.selectedCaseId);
-    if (!matchingCase) {
-      state.selectedCaseId = null;
-      renderCaseDetail(null);
-    }
-  }
+async function loadDashboard() {
+  state.dashboard = await fetchJson("/api/evaluation/dashboard");
+  renderDashboard();
+}
+
+async function loadCuration() {
+  const payload = await fetchJson(`/api/curation/items${curationQuery()}`);
+  state.curationItems = payload.items;
+  state.curationMetrics = payload.metrics;
+  renderDashboard();
+  renderCurationList();
 }
 
 async function selectCase(caseId) {
@@ -424,6 +556,12 @@ async function selectCase(caseId) {
   renderCaseList();
   const payload = await fetchJson(`/api/cases/${caseId}`);
   renderCaseDetail(payload.case);
+}
+
+function selectCurationItem(itemId) {
+  state.selectedCurationItemId = itemId;
+  renderCurationList();
+  renderCurationDetail(state.curationItems.find((item) => item.itemId === itemId) || null);
 }
 
 function formToInput(form) {
@@ -456,11 +594,9 @@ function formToInput(form) {
 
 function loadDemoIntoForm() {
   for (const [key, value] of Object.entries(demoInput)) {
-    if (!caseForm.elements[key]) {
-      continue;
+    if (caseForm.elements[key]) {
+      caseForm.elements[key].value = value ?? "";
     }
-
-    caseForm.elements[key].value = value ?? "";
   }
 }
 
@@ -468,9 +604,22 @@ async function refreshData() {
   await loadOperators();
   await loadCases();
   await loadQueue();
+  await loadDashboard();
+  await loadCuration();
 
   if (state.selectedCaseId) {
-    await selectCase(state.selectedCaseId);
+    const stillExists = state.cases.find((item) => item.caseId === state.selectedCaseId);
+    if (stillExists) {
+      await selectCase(state.selectedCaseId);
+    } else {
+      state.selectedCaseId = null;
+      renderCaseDetail(null);
+    }
+  }
+
+  if (state.selectedCurationItemId) {
+    const item = state.curationItems.find((entry) => entry.itemId === state.selectedCurationItemId);
+    renderCurationDetail(item || null);
   }
 }
 
@@ -478,13 +627,14 @@ async function bootstrapAuthenticatedApp() {
   queueStateFilter.value = state.queueFilters.state;
   queuePriorityFilter.value = state.queueFilters.priority;
   queueAssignmentFilter.value = state.queueFilters.assignment;
+  curationStatusFilter.value = state.curationFilters.status;
+  curationTypeFilter.value = state.curationFilters.type;
   await refreshData();
 }
 
 loginForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   setStatus(authStatusElement, "Signing in...");
-
   try {
     await login(loginForm.elements.email.value, loginForm.elements.accessCode.value);
     setStatus(authStatusElement, "Signed in.");
@@ -500,14 +650,12 @@ document.querySelector("#logoutButton").addEventListener("click", () => {
 caseForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   setStatus(formStatusElement, "Creating case...");
-
   try {
     const payload = await fetchJson("/api/cases", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(formToInput(caseForm))
     });
-
     setStatus(formStatusElement, "Case created.");
     await refreshData();
     await selectCase(payload.case.caseId);
@@ -518,13 +666,10 @@ caseForm.addEventListener("submit", async (event) => {
 
 reviewForm.addEventListener("submit", async (event) => {
   event.preventDefault();
-
   if (!state.selectedCaseId) {
     return;
   }
-
   setStatus(reviewStatusElement, "Saving reviewer update...");
-
   try {
     const assignedReviewerId = reviewForm.elements.assignedReviewerId.value || null;
     await fetchJson(`/api/cases/${state.selectedCaseId}/reviewer`, {
@@ -538,7 +683,6 @@ reviewForm.addEventListener("submit", async (event) => {
         author: state.session.operator.displayName
       })
     });
-
     setStatus(reviewStatusElement, "Reviewer update saved.");
     await refreshData();
     await selectCase(state.selectedCaseId);
@@ -547,26 +691,44 @@ reviewForm.addEventListener("submit", async (event) => {
   }
 });
 
+curationForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (!state.selectedCurationItemId) {
+    return;
+  }
+  setStatus(curationStatusElement, "Saving curation review...");
+  try {
+    await fetchJson(`/api/curation/items/${state.selectedCurationItemId}/review`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status: curationForm.elements.status.value || "reviewed",
+        disposition: curationForm.elements.disposition.value || "accepted",
+        correctedValue: curationForm.elements.correctedValue.value || null,
+        note: curationForm.elements.note.value || null
+      })
+    });
+    setStatus(curationStatusElement, "Curation review saved.");
+    await refreshData();
+    selectCurationItem(state.selectedCurationItemId);
+  } catch (error) {
+    setStatus(curationStatusElement, error.message);
+  }
+});
+
 document.querySelector("#refreshCases").addEventListener("click", () => {
   refreshData().catch((error) => setStatus(queueStatusElement, error.message));
 });
 
-document.querySelector("#loadDemo").addEventListener("click", () => {
-  loadDemoIntoForm();
-});
+document.querySelector("#loadDemo").addEventListener("click", loadDemoIntoForm);
 
 reassessButton.addEventListener("click", async () => {
   if (!state.selectedCaseId) {
     return;
   }
-
   setStatus(reviewStatusElement, "Reassessing case...");
-
   try {
-    await fetchJson(`/api/cases/${state.selectedCaseId}/reassess`, {
-      method: "POST"
-    });
-
+    await fetchJson(`/api/cases/${state.selectedCaseId}/reassess`, { method: "POST" });
     setStatus(reviewStatusElement, "Case reassessed.");
     await refreshData();
     await selectCase(state.selectedCaseId);
@@ -580,24 +742,31 @@ document.querySelector("#applyFilters").addEventListener("click", () => {
   state.queueFilters.priority = queuePriorityFilter.value;
   state.queueFilters.assignment = queueAssignmentFilter.value;
   setStatus(queueStatusElement, "Refreshing queue...");
-  loadQueue()
-    .then(() => setStatus(queueStatusElement, "Queue updated."))
-    .catch((error) => setStatus(queueStatusElement, error.message));
+  loadQueue().then(() => setStatus(queueStatusElement, "Queue updated.")).catch((error) => setStatus(queueStatusElement, error.message));
 });
 
 document.querySelector("#resetFilters").addEventListener("click", () => {
-  state.queueFilters = {
-    state: "",
-    priority: "",
-    assignment: "all"
-  };
+  state.queueFilters = { state: "", priority: "", assignment: "all" };
   queueStateFilter.value = "";
   queuePriorityFilter.value = "";
   queueAssignmentFilter.value = "all";
   setStatus(queueStatusElement, "Refreshing queue...");
-  loadQueue()
-    .then(() => setStatus(queueStatusElement, "Queue reset."))
-    .catch((error) => setStatus(queueStatusElement, error.message));
+  loadQueue().then(() => setStatus(queueStatusElement, "Queue reset.")).catch((error) => setStatus(queueStatusElement, error.message));
+});
+
+document.querySelector("#applyCurationFilters").addEventListener("click", () => {
+  state.curationFilters.status = curationStatusFilter.value;
+  state.curationFilters.type = curationTypeFilter.value;
+  setStatus(curationStatusElement, "Refreshing curation queue...");
+  loadCuration().then(() => setStatus(curationStatusElement, "Curation queue updated.")).catch((error) => setStatus(curationStatusElement, error.message));
+});
+
+document.querySelector("#resetCurationFilters").addEventListener("click", () => {
+  state.curationFilters = { status: "", type: "" };
+  curationStatusFilter.value = "";
+  curationTypeFilter.value = "";
+  setStatus(curationStatusElement, "Refreshing curation queue...");
+  loadCuration().then(() => setStatus(curationStatusElement, "Curation queue reset.")).catch((error) => setStatus(curationStatusElement, error.message));
 });
 
 document.querySelector("#demoLoginIntake").addEventListener("click", () => {
@@ -613,5 +782,9 @@ document.querySelector("#demoLoginReview").addEventListener("click", () => {
 loadDemoIntoForm();
 renderSession();
 renderQueueMetrics();
+renderDashboard();
+renderCaseList();
+renderCurationList();
 renderCaseDetail(null);
+renderCurationDetail(null);
 restoreSession();

@@ -16,7 +16,7 @@
         <p class="eyebrow">Operational Console</p>
         <h1>Building Approval AI OS</h1>
         <p class="lead">
-          Sign in to a tenant-scoped operator session to manage intake, triage the review queue, and update workflow state.
+          Sign in to a tenant-scoped operator session to manage intake, triage the review queue, curate evidence, and inspect quality signals.
         </p>
 
         <form id="loginForm" class="login-form">
@@ -107,6 +107,17 @@
       </aside>
 
       <main class="workspace">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Evaluation Dashboard</h2>
+          </div>
+          <div id="dashboardMetrics" class="metric-grid metric-grid-wide"></div>
+          <div class="detail-card">
+            <h4>Curation Summary</h4>
+            <div id="curationMetrics" class="metric-grid"></div>
+          </div>
+        </section>
+
         <section class="panel">
           <div class="panel-header">
             <h2>Create Case</h2>
@@ -276,6 +287,72 @@
               <span id="reviewStatus" class="status"></span>
             </div>
           </form>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Curation Queue</h2>
+          </div>
+          <div class="queue-filters">
+            <label>
+              Review status
+              <select id="curationStatusFilter">
+                <option value="">All</option>
+                <option value="open">open</option>
+                <option value="reviewed">reviewed</option>
+              </select>
+            </label>
+            <label>
+              Item type
+              <select id="curationTypeFilter">
+                <option value="">All</option>
+                <option value="citation">citation</option>
+                <option value="matched-rule">matched-rule</option>
+                <option value="narrative-claim">narrative-claim</option>
+              </select>
+            </label>
+            <div class="inline-actions">
+              <button id="applyCurationFilters" type="button">Apply</button>
+              <button id="resetCurationFilters" type="button" class="ghost">Reset</button>
+            </div>
+            <span id="curationStatus" class="status"></span>
+          </div>
+
+          <div class="two-column">
+            <div id="curationList" class="case-list"></div>
+            <div>
+              <div id="curationDetail" class="case-detail empty">Select a curation item to review evidence and record a disposition.</div>
+              <form id="curationForm" class="review-form curation-form">
+                <h3>Curation Review</h3>
+                <label>
+                  Status
+                  <select name="status">
+                    <option value="reviewed">reviewed</option>
+                    <option value="open">open</option>
+                  </select>
+                </label>
+                <label>
+                  Disposition
+                  <select name="disposition">
+                    <option value="accepted">accepted</option>
+                    <option value="corrected">corrected</option>
+                    <option value="dismissed">dismissed</option>
+                  </select>
+                </label>
+                <label class="span-2">
+                  Corrected value
+                  <textarea name="correctedValue" rows="2" placeholder="Optional corrected rule text, snippet, or reviewer instruction."></textarea>
+                </label>
+                <label class="span-2">
+                  Review note
+                  <textarea name="note" rows="4" placeholder="Record why the evidence was accepted, corrected, or dismissed."></textarea>
+                </label>
+                <div class="form-actions span-2">
+                  <button type="submit" id="saveCuration" disabled>Save Curation Review</button>
+                </div>
+              </form>
+            </div>
+          </div>
         </section>
       </main>
     </div>

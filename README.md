@@ -19,6 +19,7 @@ The system is designed to support professionals and applicants. It does not act 
 - `src/research-loop/` for an automated research loop scaffold
 - `src/app/` for core domain contracts and product foundations
 - `src/auth/` for seeded operator identities and session handling
+- `src/curation/` for evidence review records and evaluation metrics
 - `src/server/` for the internal pilot HTTP app
 - `src/web/` for the operator console UI
 - `src/cases/` for persistent case storage and assessment orchestration
@@ -42,6 +43,8 @@ The app currently supports:
 
 - tenant-scoped operator sign-in
 - reviewer queue filters and workload metrics
+- evaluation dashboard metrics from persisted case artifacts
+- curation queue for citations, matched rules, and unsupported claims
 - create an assessment case from intake data
 - persist cases locally
 - reassess existing cases

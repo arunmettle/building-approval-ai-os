@@ -140,6 +140,10 @@ textarea {
   margin-bottom: 14px;
 }
 
+.metric-grid-wide {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .metric-card {
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -165,6 +169,13 @@ textarea {
   display: grid;
   gap: 10px;
   margin-top: 14px;
+}
+
+.two-column {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 16px;
+  align-items: start;
 }
 
 .case-card {
@@ -299,6 +310,10 @@ button:disabled {
   color: var(--muted);
 }
 
+.curation-form {
+  margin-top: 14px;
+}
+
 .detail-list {
   margin: 0;
   padding-left: 18px;
@@ -324,6 +339,11 @@ button:disabled {
 
   .metric-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .metric-grid-wide,
+  .two-column {
+    grid-template-columns: 1fr;
   }
 
   .span-2,

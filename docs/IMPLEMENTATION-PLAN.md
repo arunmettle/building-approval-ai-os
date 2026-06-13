@@ -65,7 +65,7 @@ Operationalize.
 - Pricing tests
 
 Status:
-An operational console MVP is now implemented with tenant-scoped operator sessions, persistent reviewer queue workflows, and a production-shaped internal API surface. Admin curation and evaluation analytics remain future extensions.
+An operational console MVP is now implemented with tenant-scoped operator sessions, persistent reviewer queue workflows, curation review records, and evaluation dashboard metrics. Full analytics warehousing and richer admin tooling remain future extensions.
 
 ## Immediate Technical Decision
 

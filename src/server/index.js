@@ -3,6 +3,7 @@ import http from "node:http";
 import path from "node:path";
 import { listQueue, createCaseFromInput, getCaseDetail, listCaseSummaries, reassessCase, updateReviewerState } from "../cases/service.js";
 import { getSessionContext, listTenantOperators, loginOperator, logoutOperator } from "../auth/service.js";
+import { getEvaluationDashboard, listCurationItems, reviewCurationItem } from "../curation/service.js";
 
 const host = process.env.HOST || "127.0.0.1";
 const port = Number(process.env.PORT || 4010);
@@ -111,6 +112,13 @@ function filtersFromQuery(url) {
   };
 }
 
+function curationFiltersFromQuery(url) {
+  return {
+    status: url.searchParams.get("status") || null,
+    type: url.searchParams.get("type") || null
+  };
+}
+
 const server = http.createServer(async (request, response) => {
   try {
     const url = new URL(request.url || "/", `http://${host}:${port}`);
@@ -168,6 +176,16 @@ const server = http.createServer(async (request, response) => {
         return;
       }
 
+      if (request.method === "GET" && pathname === "/api/evaluation/dashboard") {
+        sendJson(response, 200, getEvaluationDashboard(sessionContext));
+        return;
+      }
+
+      if (request.method === "GET" && pathname === "/api/curation/items") {
+        sendJson(response, 200, listCurationItems(sessionContext, curationFiltersFromQuery(url)));
+        return;
+      }
+
       if (request.method === "GET" && pathname === "/api/cases") {
         sendJson(response, 200, { cases: listCaseSummaries(sessionContext) });
         return;
@@ -202,6 +220,14 @@ const server = http.createServer(async (request, response) => {
         const body = await readBody(request);
         const caseRecord = updateReviewerState(caseIdFromPathname(pathname, "/reviewer"), body, sessionContext);
         sendJson(response, 200, { case: caseRecord });
+        return;
+      }
+
+      if (request.method === "PATCH" && /^\/api\/curation\/items\/[^/]+\/review$/.test(pathname)) {
+        const body = await readBody(request);
+        const itemId = pathname.replace(/^\/api\/curation\/items\//, "").replace(/\/review$/, "");
+        const item = reviewCurationItem(itemId, body, sessionContext);
+        sendJson(response, 200, { item });
         return;
       }
 

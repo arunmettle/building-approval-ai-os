@@ -4,9 +4,9 @@
 
 - Map installer workflow from lead intake to quote to approval handoff.
 - Expand parcel lookup coverage beyond local fixture profiles to live council/property adapters.
-- Build admin curation workflows on top of extracted rules and evidence.
 - Start evidence-backed narrative explanation templates for more project types.
-- Add evaluation dashboards for queue throughput, reviewer corrections, and unsupported-claim rates.
+- Add deeper admin curation actions that write back to extracted rules and evidence stores.
+- Expand evaluation dashboards into trend views, reviewer correction slices, and source-quality scorecards.
 
 ## Next
 
