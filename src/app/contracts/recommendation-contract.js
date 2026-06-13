@@ -11,6 +11,7 @@ export const recommendationContract = {
     "professionalReviewRecommended",
     "citations",
     "narrative",
+    "explanation",
     "narrativeValidation"
   ],
   allowedRiskRatings: ["low", "medium", "high", "unknown"],

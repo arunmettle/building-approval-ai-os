@@ -41,14 +41,12 @@ function requiresFormalApplicationPath(assessment) {
   });
 }
 
-export function resolveRequiredDocuments(input, assessment) {
-  const baseDocuments = assessment.requiredDocuments || [];
+function matchedChecklistItems(input, assessment) {
   const checklistItems = readChecklistItems();
   const jurisdictionId = assessment.jurisdictionId;
   const projectType = assessment.projectType;
 
-  const extractedDocuments = checklistItems
-    .filter((item) => {
+  return checklistItems.filter((item) => {
       if (jurisdictionId && item.jurisdictionId !== jurisdictionId && item.jurisdictionId !== "qld-state-baseline") {
         return false;
       }
@@ -58,7 +56,21 @@ export function resolveRequiredDocuments(input, assessment) {
       }
 
       return item.projectTypes.includes(projectType);
-    })
+    });
+}
+
+export function resolveDocumentEvidence(input, assessment) {
+  const formalApplicationPath = requiresFormalApplicationPath(assessment);
+
+  return matchedChecklistItems(input, assessment).filter((item) => {
+    const hints = (item.documentHints || []).map((label) => normalizeDocumentLabel(label));
+    return hints.some((normalized) => !pathwaySensitiveDocuments.has(normalized) || formalApplicationPath);
+  });
+}
+
+export function resolveRequiredDocuments(input, assessment) {
+  const baseDocuments = assessment.requiredDocuments || [];
+  const extractedDocuments = resolveDocumentEvidence(input, assessment)
     .flatMap((item) => item.documentHints || []);
 
   const documentSet = new Map();
@@ -75,15 +87,6 @@ export function resolveRequiredDocuments(input, assessment) {
     documentSet.set("engineering documentation", "engineering documentation");
   }
 
-  const formalApplicationPath = requiresFormalApplicationPath(assessment);
-
   return [...documentSet.entries()]
-    .filter(([normalized]) => {
-      if (!pathwaySensitiveDocuments.has(normalized)) {
-        return true;
-      }
-
-      return formalApplicationPath;
-    })
     .map(([, label]) => label);
 }

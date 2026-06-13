@@ -1,7 +1,7 @@
 import { recommendationContract } from "../app/contracts/recommendation-contract.js";
-import { resolveRequiredDocuments } from "./document-requirements.js";
+import { resolveDocumentEvidence, resolveRequiredDocuments } from "./document-requirements.js";
 import { retrieveRelevantChunks } from "../retrieval/search.js";
-import { buildNarrativeClaims, buildNarrativeParagraphs } from "./narrative.js";
+import { buildExplanation } from "./explanation.js";
 import { validateNarrativeClaims } from "./claim-validator.js";
 
 function uniqueEvidenceFromMatches(matches) {
@@ -58,6 +58,8 @@ function deriveAssumptions(input, assessment) {
 
 function buildCitations(matches) {
   return uniqueEvidenceFromMatches(matches).map((evidence) => ({
+    citationType: "matched-rule",
+    sourceId: evidence.sourceId,
     sourceName: evidence.sourceName,
     sourceUrl: evidence.sourceUrl,
     sectionRef: evidence.sectionRef,
@@ -65,6 +67,64 @@ function buildCitations(matches) {
     confidence: evidence.confidence,
     extractedAt: evidence.retrievedAt
   }));
+}
+
+function buildRetrievedContextCitations(retrievedContext, existingCitations) {
+  const seen = new Set(existingCitations.map((citation) => `${citation.sourceUrl}:${citation.sectionRef || ""}:${citation.snippet}`));
+  const citations = [];
+
+  for (const passage of retrievedContext) {
+    const snippet = passage.text.slice(0, 500);
+    const key = `${passage.sourceUrl}:${passage.sourceName}:${snippet}`;
+
+    if (seen.has(key)) {
+      continue;
+    }
+
+    seen.add(key);
+    citations.push({
+      citationType: "retrieved-context",
+      sourceId: passage.sourceId,
+      sourceName: passage.sourceName,
+      sourceUrl: passage.sourceUrl,
+      sectionRef: passage.sourceName,
+      snippet,
+      confidence: Number(Math.min(0.85, Math.max(0.5, passage.score / 60)).toFixed(2)),
+      extractedAt: null
+    });
+  }
+
+  return citations;
+}
+
+function buildDocumentEvidenceCitations(documentEvidence, existingCitations) {
+  const seen = new Set(existingCitations.map((citation) => `${citation.sourceUrl}:${citation.snippet}`));
+
+  return documentEvidence.flatMap((item) => {
+    const evidence = item.evidence;
+
+    if (!evidence) {
+      return [];
+    }
+
+    const key = `${evidence.sourceUrl}:${evidence.snippet}`;
+
+    if (seen.has(key)) {
+      return [];
+    }
+
+    seen.add(key);
+    return [{
+      citationType: "checklist-item",
+      sourceId: evidence.sourceId,
+      sourceName: evidence.sourceName,
+      sourceUrl: evidence.sourceUrl,
+      sectionRef: evidence.sectionRef,
+      snippet: evidence.snippet,
+      confidence: evidence.confidence,
+      extractedAt: evidence.retrievedAt
+    }];
+  });
 }
 
 function assertContract(recommendation) {
@@ -80,17 +140,26 @@ function assertContract(recommendation) {
 }
 
 export function buildRecommendation(input, assessment) {
-  const citations = buildCitations(assessment.matchedRules);
   const requiredDocuments = resolveRequiredDocuments(input, assessment);
+  const documentEvidence = resolveDocumentEvidence(input, assessment);
   const retrievedContext = retrieveRelevantChunks(input, assessment);
-  const narrativeClaims = buildNarrativeClaims(input, assessment, {
+  const matchedRuleCitations = buildCitations(assessment.matchedRules);
+  const citations = [
+    ...matchedRuleCitations,
+    ...buildDocumentEvidenceCitations(documentEvidence, matchedRuleCitations),
+    ...buildRetrievedContextCitations(
+      retrievedContext,
+      [...matchedRuleCitations, ...buildDocumentEvidenceCitations(documentEvidence, matchedRuleCitations)]
+    )
+  ];
+  const explanation = buildExplanation(input, assessment, {
     citations,
     requiredDocuments,
     retrievedContext,
     pathwayLabel: assessment.pathwayLabel,
     professionalReviewRecommended: assessment.professionalReviewRecommended
   });
-  const narrativeValidation = validateNarrativeClaims(narrativeClaims, citations);
+  const narrativeValidation = validateNarrativeClaims(explanation.sentences, citations);
   const recommendation = {
     jurisdiction: assessment.jurisdictionId,
     effectiveDate: new Date().toISOString().slice(0, 10),
@@ -103,8 +172,9 @@ export function buildRecommendation(input, assessment) {
     professionalReviewRecommended: assessment.professionalReviewRecommended,
     citations,
     retrievedContext,
-    narrative: buildNarrativeParagraphs(narrativeValidation.supportedClaims),
-    narrativeClaims,
+    narrative: explanation.paragraphs,
+    explanation,
+    narrativeClaims: explanation.sentences,
     narrativeValidation,
     assumptions: deriveAssumptions(input, assessment),
     matchedRuleIds: assessment.matchedRules.map((rule) => rule.ruleId)

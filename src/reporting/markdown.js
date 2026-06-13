@@ -23,7 +23,7 @@ export function buildMarkdownReport(input, assessment, recommendation) {
   const citations = recommendation.citations
     .map(
       (citation, index) =>
-        `### Citation ${index + 1}\n- Source: ${citation.sourceName}\n- URL: ${citation.sourceUrl}\n- Section: ${citation.sectionRef || "Not captured"}\n- Confidence: ${citation.confidence}\n- Snippet: ${citation.snippet}`
+        `### Citation ${index + 1}\n- Source: ${citation.sourceName}\n- URL: ${citation.sourceUrl}\n- Type: ${citation.citationType || "evidence"}\n- Section: ${citation.sectionRef || "Not captured"}\n- Confidence: ${citation.confidence}\n- Snippet: ${citation.snippet}`
     )
     .join("\n\n");
 
@@ -55,6 +55,9 @@ export function buildMarkdownReport(input, assessment, recommendation) {
     "## Narrative Summary",
     formatList(recommendation.narrative || []),
     "",
+    "## Explanation Sentences",
+    formatClaimList(recommendation.explanation?.sentences || recommendation.narrativeClaims || []),
+    "",
     "## Potential Compliance Issues",
     formatList(
       assessment.matchedRules
@@ -76,7 +79,7 @@ export function buildMarkdownReport(input, assessment, recommendation) {
     "",
     "## Claim Validation",
     `- Status: ${recommendation.narrativeValidation?.status || "not-run"}`,
-    formatClaimList(recommendation.narrativeClaims || []),
+    formatClaimList(recommendation.narrativeValidation?.supportedClaims || []),
     "",
     "## Retrieved Context",
     retrievedContext || "No retrieved context available.",
