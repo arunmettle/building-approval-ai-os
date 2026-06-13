@@ -1,0 +1,248 @@
+:root {
+  --bg: #efe7db;
+  --panel: #fffaf2;
+  --panel-strong: #f5e7cf;
+  --line: #cbbda6;
+  --text: #231a12;
+  --muted: #665849;
+  --accent: #145a46;
+  --accent-soft: #d2eadf;
+  --warn: #9a4b17;
+  --danger: #8f2d24;
+  --shadow: 0 14px 40px rgba(53, 37, 17, 0.12);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(20, 90, 70, 0.12), transparent 26%),
+    linear-gradient(180deg, #f4ecdf 0%, #ebe0cf 100%);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+.shell {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  min-height: 100vh;
+}
+
+.sidebar,
+.workspace {
+  padding: 24px;
+}
+
+.sidebar {
+  border-right: 1px solid var(--line);
+  background: rgba(255, 250, 242, 0.75);
+}
+
+.brand h1,
+.panel h2,
+.review-form h3 {
+  margin: 0;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.workspace {
+  display: grid;
+  gap: 20px;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid rgba(132, 104, 72, 0.18);
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.case-list {
+  display: grid;
+  gap: 10px;
+}
+
+.case-card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.case-card.active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.case-card h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.case-meta {
+  margin: 2px 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: var(--panel-strong);
+  font-size: 12px;
+}
+
+.grid-form,
+.review-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.grid-form label,
+.review-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.span-2 {
+  grid-column: span 2;
+}
+
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: white;
+}
+
+button {
+  border: 0;
+  border-radius: 10px;
+  padding: 10px 14px;
+  background: var(--accent);
+  color: white;
+  cursor: pointer;
+}
+
+button.ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.inline-actions,
+.form-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.status {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.case-detail {
+  display: grid;
+  gap: 14px;
+}
+
+.case-detail.empty {
+  color: var(--muted);
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.detail-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: white;
+}
+
+.detail-card h4 {
+  margin: 0 0 8px;
+}
+
+.detail-card p,
+.detail-card li {
+  margin: 4px 0;
+  color: var(--muted);
+}
+
+.detail-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+@media (max-width: 1000px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .detail-grid,
+  .grid-form,
+  .review-form {
+    grid-template-columns: 1fr;
+  }
+
+  .span-2 {
+    grid-column: span 1;
+  }
+}

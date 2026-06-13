@@ -6,6 +6,7 @@
   "scripts": {
     "aggregate:sources": "node src/aggregator/index.js",
     "assess:example": "node src/assessment/cli.js examples/intake/sunshine-coast-shed.json",
+    "app:start": "node src/server/index.js",
     "extract:sources": "node src/extraction/index.js",
     "retrieval:build": "node src/retrieval/build-index.js",
     "retrieval:example": "node src/retrieval/cli.js examples/intake/sunshine-coast-shed.json",

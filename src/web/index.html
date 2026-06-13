@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Building Approval AI OS</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%2316292f'/%3E%3Cpath d='M16 40V24l16-8 16 8v16H16Z' fill='%23d7e7ea'/%3E%3Cpath d='M24 40V28h16v12' fill='%2334878f'/%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="brand">
+          <p class="eyebrow">Operator Console</p>
+          <h1>Building Approval AI OS</h1>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header">
+            <h2>Cases</h2>
+            <button id="refreshCases" class="ghost">Refresh</button>
+          </div>
+          <div id="caseList" class="case-list"></div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Create Case</h2>
+            <button id="loadDemo" class="ghost">Load Demo</button>
+          </div>
+
+          <form id="caseForm" class="grid-form">
+            <label>
+              Property profile ID
+              <input name="propertyProfileId" placeholder="sc-shed-demo-001" />
+            </label>
+            <label>
+              Property lookup key
+              <input name="propertyLookupKey" placeholder="sunshine-coast-demo-shed-lot" />
+            </label>
+            <label class="span-2">
+              Address
+              <input name="address" placeholder="12 Coastal Court, Bokarina QLD 4575" />
+            </label>
+            <label>
+              Jurisdiction
+              <input name="jurisdictionId" value="au-qld-sunshine-coast" />
+            </label>
+            <label>
+              Project type
+              <select name="projectType">
+                <option value="shed">shed</option>
+                <option value="deck">deck</option>
+                <option value="pergola">pergola</option>
+                <option value="patio">patio</option>
+              </select>
+            </label>
+            <label>
+              Area sqm
+              <input name="planAreaSqm" type="number" step="0.1" value="9" />
+            </label>
+            <label>
+              Max height m
+              <input name="maxHeightM" type="number" step="0.1" value="2.4" />
+            </label>
+            <label>
+              Mean height m
+              <input name="meanHeightM" type="number" step="0.1" value="2.1" />
+            </label>
+            <label>
+              Longest side m
+              <input name="longestSideM" type="number" step="0.1" value="5" />
+            </label>
+            <label>
+              Front boundary m
+              <input name="distanceToFrontBoundaryM" type="number" step="0.1" value="6" />
+            </label>
+            <label>
+              Side boundary m
+              <input name="distanceToSideBoundaryM" type="number" step="0.1" value="2" />
+            </label>
+            <label>
+              Rear boundary m
+              <input name="distanceToRearBoundaryM" type="number" step="0.1" value="2" />
+            </label>
+            <label>
+              Easement status
+              <select name="easementStatus">
+                <option value="no">no</option>
+                <option value="yes">yes</option>
+                <option value="unknown">unknown</option>
+              </select>
+            </label>
+            <label>
+              Boundary setbacks compliant
+              <select name="boundarySetbacksCompliant">
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </label>
+            <label>
+              Located over infrastructure
+              <select name="locatedOverInfrastructure">
+                <option value="false">false</option>
+                <option value="true">true</option>
+              </select>
+            </label>
+            <label>
+              Near retaining wall
+              <select name="nearRetainingWall">
+                <option value="false">false</option>
+                <option value="true">true</option>
+              </select>
+            </label>
+            <label>
+              Near pool enclosure
+              <select name="nearPoolEnclosure">
+                <option value="false">false</option>
+                <option value="true">true</option>
+              </select>
+            </label>
+            <label>
+              Affects existing structure
+              <select name="affectsExistingStructure">
+                <option value="false">false</option>
+                <option value="true">true</option>
+              </select>
+            </label>
+            <label>
+              Site plan available
+              <select name="sitePlanAvailable">
+                <option value="">unknown</option>
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </label>
+            <label>
+              Drawing available
+              <select name="dimensionedDrawingAvailable">
+                <option value="">unknown</option>
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </label>
+            <label>
+              Site photos available
+              <select name="sitePhotosAvailable">
+                <option value="">unknown</option>
+                <option value="true">true</option>
+                <option value="false">false</option>
+              </select>
+            </label>
+            <div class="form-actions span-2">
+              <button type="submit">Create Case</button>
+              <span id="formStatus" class="status"></span>
+            </div>
+          </form>
+        </section>
+
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Case Detail</h2>
+            <div class="inline-actions">
+              <button id="reassessCase" class="ghost" disabled>Reassess</button>
+            </div>
+          </div>
+
+          <div id="caseDetail" class="case-detail empty">Select a case to inspect workflow, evidence, and review actions.</div>
+
+          <form id="reviewForm" class="review-form">
+            <h3>Reviewer Update</h3>
+            <label>
+              Assigned reviewer
+              <input name="assignedReviewer" placeholder="reviewer@team" />
+            </label>
+            <label>
+              Workflow state
+              <select name="state">
+                <option value="">Keep existing</option>
+                <option value="needs-intake-clarification">needs-intake-clarification</option>
+                <option value="pending-documents">pending-documents</option>
+                <option value="professional-review-required">professional-review-required</option>
+                <option value="ready-for-submission-pack">ready-for-submission-pack</option>
+              </select>
+            </label>
+            <label class="span-2">
+              Reviewer note
+              <textarea name="note" rows="4" placeholder="Record the review decision or next action."></textarea>
+            </label>
+            <div class="form-actions span-2">
+              <button type="submit" id="saveReview" disabled>Save Review Update</button>
+              <span id="reviewStatus" class="status"></span>
+            </div>
+          </form>
+        </section>
+      </main>
+    </div>
+
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

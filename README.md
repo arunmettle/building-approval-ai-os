@@ -18,7 +18,32 @@ The system is designed to support professionals and applicants. It does not act 
 - `docs/` for execution plans, research operating model, and backlog
 - `src/research-loop/` for an automated research loop scaffold
 - `src/app/` for core domain contracts and product foundations
+- `src/server/` for the internal pilot HTTP app
+- `src/web/` for the operator console UI
+- `src/cases/` for persistent case storage and assessment orchestration
 - `runs/` for generated research cycle outputs
+
+## Internal Pilot App
+
+Start the internal pilot app:
+
+```bash
+npm run app:start
+```
+
+Then open:
+
+```text
+http://127.0.0.1:4010
+```
+
+The app currently supports:
+
+- create an assessment case from intake data
+- persist cases locally
+- reassess existing cases
+- review workflow states, blockers, and actions
+- assign reviewers and store reviewer notes
 
 ## Research Loop
 
