@@ -1,0 +1,89 @@
+[
+  {
+    "propertyProfileId": "sc-shed-demo-001",
+    "lookupKey": "sunshine-coast-demo-shed-lot",
+    "aliases": [
+      "12 coastal court bokarina qld 4575",
+      "lot 12 rp123456 bokarina"
+    ],
+    "jurisdictionId": "au-qld-sunshine-coast",
+    "address": "12 Coastal Court, Bokarina QLD 4575",
+    "lotPlan": "Lot 12 RP123456",
+    "zone": "Low density residential zone",
+    "overlays": [
+      "flood hazard",
+      "coastal"
+    ],
+    "currentUse": "residential",
+    "sources": [
+      {
+        "label": "Interactive mapping",
+        "url": "https://www.sunshinecoast.qld.gov.au/development/planning-documents/sunshine-coast-planning-scheme-2014/interactive-mapping",
+        "type": "planning-mapping-portal"
+      },
+      {
+        "label": "Sheds",
+        "url": "https://www.sunshinecoast.qld.gov.au/development/building/sheds",
+        "type": "council-guidance"
+      }
+    ]
+  },
+  {
+    "propertyProfileId": "bris-shed-demo-001",
+    "lookupKey": "brisbane-demo-shed-lot",
+    "aliases": [
+      "45 mason street camp hill qld 4152",
+      "lot 7 rp654321 camp hill"
+    ],
+    "jurisdictionId": "au-qld-brisbane",
+    "address": "45 Mason Street, Camp Hill QLD 4152",
+    "lotPlan": "Lot 7 RP654321",
+    "zone": "Low-medium density residential zone",
+    "overlays": [
+      "character",
+      "neighbourhood-plan"
+    ],
+    "currentUse": "residential",
+    "sources": [
+      {
+        "label": "City Plan online",
+        "url": "https://www.brisbane.qld.gov.au/building-and-planning/supporting-documents-and-online-tools/city-plan-online",
+        "type": "planning-scheme-portal"
+      },
+      {
+        "label": "Building a shed - approvals and requirements",
+        "url": "https://www.brisbane.qld.gov.au/building-and-planning/getting-started-on-your-project/residential-projects/shed",
+        "type": "council-guidance"
+      }
+    ]
+  },
+  {
+    "propertyProfileId": "mb-shed-demo-001",
+    "lookupKey": "moreton-bay-demo-shed-lot",
+    "aliases": [
+      "18 bottlebrush drive narangba qld 4504",
+      "lot 19 sp987654 narangba"
+    ],
+    "jurisdictionId": "au-qld-moreton-bay",
+    "address": "18 Bottlebrush Drive, Narangba QLD 4504",
+    "lotPlan": "Lot 19 SP987654",
+    "zone": "General residential zone",
+    "overlays": [
+      "environmental",
+      "bushfire"
+    ],
+    "currentUse": "residential",
+    "sources": [
+      {
+        "label": "My property look up",
+        "url": "https://www.moretonbay.qld.gov.au/Services/Building-Development/Planning-Schemes/My-Property-Look-Up",
+        "type": "property-lookup"
+      },
+      {
+        "label": "Domestic outbuildings (sheds and carports)",
+        "url": "https://www.moretonbay.qld.gov.au/Services/Building-Development/Planning-Schemes/MBRC/Info-Sheets/Domestic-Outbuildings",
+        "type": "planning-scheme-info-sheet"
+      }
+    ]
+  }
+]

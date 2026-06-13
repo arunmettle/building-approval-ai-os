@@ -3,7 +3,7 @@ import path from "node:path";
 import { propertyProfileContract } from "../app/contracts/property-profile.js";
 
 function readPropertyProfiles() {
-  const profilesPath = path.resolve(process.cwd(), "data", "property", "profiles.json");
+  const profilesPath = path.resolve(process.cwd(), "src", "property", "profiles.json");
 
   if (!fs.existsSync(profilesPath)) {
     return [];

@@ -17,7 +17,7 @@ Add parcel-level property context so assessments can resolve zone and overlay in
 ## What Was Added
 
 - property profile contract in `src/app/contracts/property-profile.js`
-- local property registry in `data/property/profiles.json`
+- local property registry in `src/property/profiles.json`
 - property lookup and enrichment service in `src/property/lookup.js`
 - parcel-aware assessment changes in `src/assessment/engine.js`
 - report output changes in `src/reporting/recommendation.js`, `src/reporting/generate.js`, and `src/reporting/markdown.js`

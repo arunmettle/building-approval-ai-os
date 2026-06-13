@@ -8,7 +8,7 @@ Move assessment from jurisdiction-only guidance to parcel-aware guidance.
 
 The current repository uses a local property-profile registry in:
 
-- `data/property/profiles.json`
+- `src/property/profiles.json`
 
 and a lookup/enrichment service in:
 
