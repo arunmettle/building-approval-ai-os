@@ -185,5 +185,13 @@ export function lookupProperty(intake, preferredMode = process.env.PROPERTY_LOOK
     return liveResult;
   }
 
-  return liveResult.propertyProfile ? liveResult : fixtureResult;
+  if (liveResult.propertyProfile) {
+    return liveResult;
+  }
+
+  if (fixtureResult.propertyProfile) {
+    return fixtureResult;
+  }
+
+  return liveResult;
 }

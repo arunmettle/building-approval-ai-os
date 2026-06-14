@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import { operators as seededOperators } from "../auth/operators.js";
 
 function readJson(relativePath, fallback) {
   const absolutePath = path.resolve(process.cwd(), relativePath);
@@ -75,9 +76,6 @@ function ensureOutputDir(outputDir) {
   fs.mkdirSync(outputDir, { recursive: true });
 }
 
-const operatorSource = fs.readFileSync(path.resolve(process.cwd(), "src", "auth", "operators.js"), "utf8");
-const operatorArrayMatch = operatorSource.match(/export const operators = (\[[\s\S]*?\]);/);
-const seededOperators = operatorArrayMatch ? Function(`"use strict"; return (${operatorArrayMatch[1]});`)() : [];
 const sessions = readJson("data/app/sessions.json", []);
 const cases = readJson("data/app/cases.json", []);
 const curation = readJson("data/app/curation.json", []);

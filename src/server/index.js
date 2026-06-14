@@ -94,8 +94,8 @@ function authenticateApiRequest(request) {
   return getSessionContext(token);
 }
 
-function requireSession(request, response) {
-  const sessionContext = authenticateApiRequest(request);
+async function requireSession(request, response) {
+  const sessionContext = await authenticateApiRequest(request);
 
   if (!sessionContext) {
     sendJson(response, 401, { error: "Authentication required." });
@@ -143,13 +143,13 @@ const server = http.createServer(async (request, response) => {
 
     if (request.method === "POST" && pathname === "/api/session/login") {
       const body = await readBody(request);
-      const session = loginOperator(body.email, body.accessCode);
+      const session = await loginOperator(body.email, body.accessCode);
       sendJson(response, 200, { session });
       return;
     }
 
     if (request.method === "GET" && pathname === "/api/session") {
-      const sessionContext = requireSession(request, response);
+      const sessionContext = await requireSession(request, response);
 
       if (!sessionContext) {
         return;
@@ -164,7 +164,7 @@ const server = http.createServer(async (request, response) => {
     }
 
     if (request.method === "POST" && pathname === "/api/session/logout") {
-      const sessionContext = requireSession(request, response);
+      const sessionContext = await requireSession(request, response);
 
       if (!sessionContext) {
         return;
@@ -174,13 +174,13 @@ const server = http.createServer(async (request, response) => {
         return;
       }
 
-      logoutOperator(sessionContext.token);
+      await logoutOperator(sessionContext.token);
       sendJson(response, 200, { ok: true });
       return;
     }
 
     if (pathname.startsWith("/api/")) {
-      const sessionContext = requireSession(request, response);
+      const sessionContext = await requireSession(request, response);
 
       if (!sessionContext) {
         return;
@@ -190,7 +190,7 @@ const server = http.createServer(async (request, response) => {
         if (!requirePermission(sessionContext, response, "operators:view")) {
           return;
         }
-        sendJson(response, 200, { operators: listTenantOperators(sessionContext.tenantId) });
+        sendJson(response, 200, { operators: await listTenantOperators(sessionContext.tenantId) });
         return;
       }
 
@@ -198,7 +198,7 @@ const server = http.createServer(async (request, response) => {
         if (!requirePermission(sessionContext, response, "queue:view")) {
           return;
         }
-        sendJson(response, 200, listQueue(sessionContext, filtersFromQuery(url)));
+        sendJson(response, 200, await listQueue(sessionContext, filtersFromQuery(url)));
         return;
       }
 
@@ -206,7 +206,7 @@ const server = http.createServer(async (request, response) => {
         if (!requirePermission(sessionContext, response, "evaluation:view")) {
           return;
         }
-        sendJson(response, 200, getEvaluationDashboard(sessionContext));
+        sendJson(response, 200, await getEvaluationDashboard(sessionContext));
         return;
       }
 
@@ -214,7 +214,7 @@ const server = http.createServer(async (request, response) => {
         if (!requirePermission(sessionContext, response, "curation:view")) {
           return;
         }
-        sendJson(response, 200, listCurationItems(sessionContext, curationFiltersFromQuery(url)));
+        sendJson(response, 200, await listCurationItems(sessionContext, curationFiltersFromQuery(url)));
         return;
       }
 
@@ -239,7 +239,7 @@ const server = http.createServer(async (request, response) => {
         if (!requirePermission(sessionContext, response, "cases:view")) {
           return;
         }
-        sendJson(response, 200, { cases: listCaseSummaries(sessionContext) });
+        sendJson(response, 200, { cases: await listCaseSummaries(sessionContext) });
         return;
       }
 
@@ -248,7 +248,7 @@ const server = http.createServer(async (request, response) => {
           return;
         }
         const body = await readBody(request);
-        const caseRecord = createCaseFromInput(body.input || body, sessionContext);
+        const caseRecord = await createCaseFromInput(body.input || body, sessionContext);
         sendJson(response, 201, { case: caseRecord });
         return;
       }
@@ -257,7 +257,7 @@ const server = http.createServer(async (request, response) => {
         if (!requirePermission(sessionContext, response, "cases:view")) {
           return;
         }
-        const caseRecord = getCaseDetail(caseIdFromPathname(pathname), sessionContext);
+        const caseRecord = await getCaseDetail(caseIdFromPathname(pathname), sessionContext);
 
         if (!caseRecord) {
           sendJson(response, 404, { error: "Case not found." });
@@ -272,7 +272,7 @@ const server = http.createServer(async (request, response) => {
         if (!requirePermission(sessionContext, response, "cases:reassess")) {
           return;
         }
-        const caseRecord = reassessCase(caseIdFromPathname(pathname, "/reassess"), sessionContext);
+        const caseRecord = await reassessCase(caseIdFromPathname(pathname, "/reassess"), sessionContext);
         sendJson(response, 200, { case: caseRecord });
         return;
       }
@@ -282,7 +282,7 @@ const server = http.createServer(async (request, response) => {
           return;
         }
         const body = await readBody(request);
-        const caseRecord = updateReviewerState(caseIdFromPathname(pathname, "/reviewer"), body, sessionContext);
+        const caseRecord = await updateReviewerState(caseIdFromPathname(pathname, "/reviewer"), body, sessionContext);
         sendJson(response, 200, { case: caseRecord });
         return;
       }
@@ -293,7 +293,7 @@ const server = http.createServer(async (request, response) => {
         }
         const body = await readBody(request);
         const itemId = pathname.replace(/^\/api\/curation\/items\//, "").replace(/\/review$/, "");
-        const item = reviewCurationItem(itemId, body, sessionContext);
+        const item = await reviewCurationItem(itemId, body, sessionContext);
         sendJson(response, 200, { item });
         return;
       }

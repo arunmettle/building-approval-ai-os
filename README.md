@@ -87,6 +87,13 @@ Supabase bootstrap assets in this repo:
 - `npm run db:export-supabase`
 - [PHASE-SUPABASE-BOOTSTRAP.md](/C:/Users/arunk/Documents/Codex/2026-06-13/building-approval-ai-os-blueprint-pack/docs/PHASE-SUPABASE-BOOTSTRAP.md)
 
+Optional runtime mode:
+
+- set `SUPABASE_URL`
+- set `SUPABASE_SERVICE_ROLE_KEY`
+
+When those are present, case/session/curation repositories switch from local JSON storage to Supabase-backed REST persistence.
+
 ## Research Loop
 
 Run the autoresearch loop:

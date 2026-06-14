@@ -13,14 +13,14 @@ function attachPermissions(operator) {
   };
 }
 
-export function loginOperator(email, accessCode) {
-  const operator = findOperatorByEmail(email);
+export async function loginOperator(email, accessCode) {
+  const operator = await findOperatorByEmail(email);
 
   if (!operator || operator.accessCode !== accessCode) {
     throw new Error("Invalid operator credentials.");
   }
 
-  const session = createSession(operator);
+  const session = await createSession(operator);
 
   return {
     token: session.token,
@@ -28,18 +28,18 @@ export function loginOperator(email, accessCode) {
   };
 }
 
-export function getSessionContext(token) {
+export async function getSessionContext(token) {
   if (!token) {
     return null;
   }
 
-  const session = getSession(token);
+  const session = await getSession(token);
 
   if (!session) {
     return null;
   }
 
-  const operator = findOperatorById(session.operatorId);
+  const operator = await findOperatorById(session.operatorId);
 
   if (!operator) {
     return null;
@@ -52,12 +52,12 @@ export function getSessionContext(token) {
   };
 }
 
-export function logoutOperator(token) {
-  revokeSession(token);
+export async function logoutOperator(token) {
+  await revokeSession(token);
 }
 
-export function listTenantOperators(tenantId) {
-  return listOperatorsForTenant(tenantId).map((operator) => ({
+export async function listTenantOperators(tenantId) {
+  return (await listOperatorsForTenant(tenantId)).map((operator) => ({
     ...operator,
     permissions: permissionsForRole(operator.role)
   }));

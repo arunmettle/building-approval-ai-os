@@ -125,7 +125,7 @@ function filterQueueItem(item, filters, actor) {
   return true;
 }
 
-export function createCaseFromInput(input, sessionContext) {
+export async function createCaseFromInput(input, sessionContext) {
   const caseId = nextCaseId();
   const assessment = assessProject(input);
   const effectiveInput = assessment.input || input;
@@ -144,12 +144,12 @@ export function createCaseFromInput(input, sessionContext) {
     })
   });
 
-  saveCase(caseRecord);
+  await saveCase(caseRecord);
   return caseRecord;
 }
 
-export function reassessCase(caseId, sessionContext) {
-  const existing = getCaseById(caseId, sessionContext.tenantId);
+export async function reassessCase(caseId, sessionContext) {
+  const existing = await getCaseById(caseId, sessionContext.tenantId);
 
   if (!existing) {
     throw new Error(`Case not found: ${caseId}`);
@@ -178,12 +178,12 @@ export function reassessCase(caseId, sessionContext) {
   updated.assignedReviewerId = existing.assignedReviewerId;
   updated.reviewerNotes = existing.reviewerNotes || [];
 
-  saveCase(updated);
+  await saveCase(updated);
   return updated;
 }
 
-export function updateReviewerState(caseId, payload, sessionContext) {
-  const existing = getCaseById(caseId, sessionContext.tenantId);
+export async function updateReviewerState(caseId, payload, sessionContext) {
+  const existing = await getCaseById(caseId, sessionContext.tenantId);
 
   if (!existing) {
     throw new Error(`Case not found: ${caseId}`);
@@ -225,20 +225,20 @@ export function updateReviewerState(caseId, payload, sessionContext) {
     ))
   };
 
-  saveCase(updated);
+  await saveCase(updated);
   return updated;
 }
 
-export function getCaseDetail(caseId, sessionContext) {
+export async function getCaseDetail(caseId, sessionContext) {
   return getCaseById(caseId, sessionContext.tenantId);
 }
 
-export function listCaseSummaries(sessionContext) {
-  return listCases(sessionContext.tenantId).map(summarizeCase);
+export async function listCaseSummaries(sessionContext) {
+  return (await listCases(sessionContext.tenantId)).map(summarizeCase);
 }
 
-export function listQueue(sessionContext, filters = {}) {
-  const items = listCaseSummaries(sessionContext).filter((item) => filterQueueItem(item, filters, sessionContext.operator));
+export async function listQueue(sessionContext, filters = {}) {
+  const items = (await listCaseSummaries(sessionContext)).filter((item) => filterQueueItem(item, filters, sessionContext.operator));
   const metrics = {
     total: items.length,
     unassigned: items.filter((item) => !item.assignedReviewerId).length,

@@ -1,4 +1,6 @@
-export const operators = [
+import { isSupabaseEnabled, selectRows } from "../platform/supabase-client.js";
+
+const seededOperators = [
   {
     operatorId: "op-sunrise-intake",
     tenantId: "tenant-sunrise-installers",
@@ -37,7 +39,7 @@ export const operators = [
   }
 ];
 
-export function sanitizeOperator(operator) {
+function sanitizeOperator(operator) {
   if (!operator) {
     return null;
   }
@@ -52,16 +54,44 @@ export function sanitizeOperator(operator) {
   };
 }
 
-export function findOperatorByEmail(email) {
-  return operators.find((operator) => operator.email.toLowerCase() === String(email || "").toLowerCase()) || null;
+function mapSupabaseOperator(row, tenantNames) {
+  return {
+    operatorId: row.operator_id,
+    tenantId: row.tenant_id,
+    tenantName: tenantNames.get(row.tenant_id) || row.tenant_id,
+    email: row.email,
+    displayName: row.display_name,
+    role: row.role,
+    accessCode: row.access_code
+  };
 }
 
-export function findOperatorById(operatorId) {
-  return operators.find((operator) => operator.operatorId === operatorId) || null;
+async function loadOperators() {
+  if (!isSupabaseEnabled()) {
+    return seededOperators;
+  }
+
+  const [tenantRows, operatorRows] = await Promise.all([
+    selectRows("app_tenants"),
+    selectRows("app_operators")
+  ]);
+
+  const tenantNames = new Map(tenantRows.map((row) => [row.tenant_id, row.tenant_name]));
+  return operatorRows.map((row) => mapSupabaseOperator(row, tenantNames));
 }
 
-export function listOperatorsForTenant(tenantId) {
-  return operators
+export async function findOperatorByEmail(email) {
+  return (await loadOperators()).find((operator) => operator.email.toLowerCase() === String(email || "").toLowerCase()) || null;
+}
+
+export async function findOperatorById(operatorId) {
+  return (await loadOperators()).find((operator) => operator.operatorId === operatorId) || null;
+}
+
+export async function listOperatorsForTenant(tenantId) {
+  return (await loadOperators())
     .filter((operator) => operator.tenantId === tenantId)
     .map(sanitizeOperator);
 }
+
+export { sanitizeOperator, seededOperators as operators };

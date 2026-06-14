@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import crypto from "node:crypto";
 import { listCases } from "../cases/repository.js";
-import { getCurationReview, listCurationReviews, saveCurationReview } from "./repository.js";
+import { listCurationReviews, saveCurationReview } from "./repository.js";
 
 function stableItemId(type, seed) {
   return `${type}-${crypto.createHash("sha1").update(seed).digest("hex").slice(0, 12)}`;
@@ -91,8 +91,8 @@ function mergeCandidate(target, candidate) {
   };
 }
 
-function collectCandidateMapForTenant(tenantId) {
-  const cases = listCases(tenantId);
+async function collectCandidateMapForTenant(tenantId) {
+  const cases = await listCases(tenantId);
   const byId = new Map();
 
   for (const caseRecord of cases) {
@@ -140,10 +140,10 @@ function applyFilters(item, filters) {
   return true;
 }
 
-export function listCurationItems(sessionContext, filters = {}) {
-  const reviews = listCurationReviews(sessionContext.tenantId);
+export async function listCurationItems(sessionContext, filters = {}) {
+  const reviews = await listCurationReviews(sessionContext.tenantId);
   const reviewMap = new Map(reviews.map((review) => [review.itemId, review]));
-  const candidates = [...collectCandidateMapForTenant(sessionContext.tenantId).values()]
+  const candidates = [...(await collectCandidateMapForTenant(sessionContext.tenantId)).values()]
     .map((candidate) => {
       const review = reviewMap.get(candidate.itemId);
       return {
@@ -176,8 +176,8 @@ export function listCurationItems(sessionContext, filters = {}) {
   };
 }
 
-export function reviewCurationItem(itemId, payload, sessionContext) {
-  const candidate = collectCandidateMapForTenant(sessionContext.tenantId).get(itemId);
+export async function reviewCurationItem(itemId, payload, sessionContext) {
+  const candidate = (await collectCandidateMapForTenant(sessionContext.tenantId)).get(itemId);
 
   if (!candidate) {
     throw new Error(`Curation item not found: ${itemId}`);
@@ -199,7 +199,7 @@ export function reviewCurationItem(itemId, payload, sessionContext) {
     }
   };
 
-  saveCurationReview(review);
+  await saveCurationReview(review);
   return {
     ...candidate,
     reviewStatus: review.status,
@@ -211,9 +211,9 @@ export function reviewCurationItem(itemId, payload, sessionContext) {
   };
 }
 
-export function getEvaluationDashboard(sessionContext) {
-  const cases = listCases(sessionContext.tenantId);
-  const curation = listCurationItems(sessionContext, {});
+export async function getEvaluationDashboard(sessionContext) {
+  const cases = await listCases(sessionContext.tenantId);
+  const curation = await listCurationItems(sessionContext, {});
 
   let totalNarrativeClaims = 0;
   let unsupportedClaims = 0;
