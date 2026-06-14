@@ -73,6 +73,12 @@ const queueAssignmentFilter = document.querySelector("#queueAssignmentFilter");
 const curationStatusFilter = document.querySelector("#curationStatusFilter");
 const curationTypeFilter = document.querySelector("#curationTypeFilter");
 const reviewerSelect = document.querySelector("#assignedReviewerId");
+const curationSectionElement = document.querySelector("#curationSection");
+const reviewAccessNoteElement = document.querySelector("#reviewAccessNote");
+
+function hasPermission(permission) {
+  return Boolean(state.session?.operator?.permissions?.includes(permission));
+}
 
 function parseMaybeBoolean(value) {
   if (value === "true") {
@@ -127,6 +133,9 @@ function renderSession() {
 
   if (!authenticated) {
     operatorSummaryElement.innerHTML = "";
+    curationSectionElement.hidden = true;
+    reviewForm.hidden = false;
+    reviewAccessNoteElement.hidden = true;
     return;
   }
 
@@ -137,6 +146,10 @@ function renderSession() {
     <p class="case-meta">${state.session.operator.role}</p>
     <p class="case-meta">${state.session.operator.tenantName}</p>
   `;
+
+  curationSectionElement.hidden = !hasPermission("curation:view");
+  reviewForm.hidden = !hasPermission("cases:review");
+  reviewAccessNoteElement.hidden = hasPermission("cases:review");
 }
 
 function renderMetricCards(target, metrics, config) {
@@ -273,8 +286,8 @@ function renderCaseDetail(caseRecord) {
     return;
   }
 
-  reassessButton.disabled = false;
-  saveReviewButton.disabled = false;
+  reassessButton.disabled = !hasPermission("cases:reassess");
+  saveReviewButton.disabled = !hasPermission("cases:review");
   caseDetailElement.className = "case-detail";
   caseDetailElement.innerHTML = `
     <div class="detail-grid">
@@ -295,6 +308,7 @@ function renderCaseDetail(caseRecord) {
         <p><strong>Zone:</strong> ${caseRecord.propertyContext?.zone || "Unknown"}</p>
         <p><strong>Overlays:</strong> ${caseRecord.propertyContext?.overlays?.join(", ") || "None"}</p>
         <p><strong>Address:</strong> ${caseRecord.address || "Unknown"}</p>
+        <p><strong>Lookup:</strong> ${caseRecord.propertyContext?.lookupStatus || "Unknown"} via ${caseRecord.propertyContext?.lookupAdapterId || "unknown-adapter"}</p>
       </div>
     </div>
     <div class="detail-grid">
@@ -539,11 +553,25 @@ async function loadQueue() {
 }
 
 async function loadDashboard() {
+  if (!hasPermission("evaluation:view")) {
+    state.dashboard = null;
+    state.curationMetrics = null;
+    renderDashboard();
+    return;
+  }
+
   state.dashboard = await fetchJson("/api/evaluation/dashboard");
   renderDashboard();
 }
 
 async function loadCuration() {
+  if (!hasPermission("curation:view")) {
+    state.curationItems = [];
+    state.curationMetrics = null;
+    renderCurationList();
+    return;
+  }
+
   const payload = await fetchJson(`/api/curation/items${curationQuery()}`);
   state.curationItems = payload.items;
   state.curationMetrics = payload.metrics;
@@ -755,6 +783,9 @@ document.querySelector("#resetFilters").addEventListener("click", () => {
 });
 
 document.querySelector("#applyCurationFilters").addEventListener("click", () => {
+  if (!hasPermission("curation:view")) {
+    return;
+  }
   state.curationFilters.status = curationStatusFilter.value;
   state.curationFilters.type = curationTypeFilter.value;
   setStatus(curationStatusElement, "Refreshing curation queue...");
@@ -762,6 +793,9 @@ document.querySelector("#applyCurationFilters").addEventListener("click", () => 
 });
 
 document.querySelector("#resetCurationFilters").addEventListener("click", () => {
+  if (!hasPermission("curation:view")) {
+    return;
+  }
   state.curationFilters = { status: "", type: "" };
   curationStatusFilter.value = "";
   curationTypeFilter.value = "";

@@ -1,5 +1,17 @@
 import { createSession, getSession, revokeSession } from "./repository.js";
 import { findOperatorByEmail, findOperatorById, listOperatorsForTenant, sanitizeOperator } from "./operators.js";
+import { permissionsForRole } from "./policy.js";
+
+function attachPermissions(operator) {
+  if (!operator) {
+    return null;
+  }
+
+  return {
+    ...sanitizeOperator(operator),
+    permissions: permissionsForRole(operator.role)
+  };
+}
 
 export function loginOperator(email, accessCode) {
   const operator = findOperatorByEmail(email);
@@ -12,7 +24,7 @@ export function loginOperator(email, accessCode) {
 
   return {
     token: session.token,
-    operator: sanitizeOperator(operator)
+    operator: attachPermissions(operator)
   };
 }
 
@@ -36,7 +48,7 @@ export function getSessionContext(token) {
   return {
     token: session.token,
     tenantId: session.tenantId,
-    operator: sanitizeOperator(operator)
+    operator: attachPermissions(operator)
   };
 }
 
@@ -45,5 +57,8 @@ export function logoutOperator(token) {
 }
 
 export function listTenantOperators(tenantId) {
-  return listOperatorsForTenant(tenantId);
+  return listOperatorsForTenant(tenantId).map((operator) => ({
+    ...operator,
+    permissions: permissionsForRole(operator.role)
+  }));
 }

@@ -67,6 +67,9 @@ Operationalize.
 Status:
 An operational console MVP is now implemented with tenant-scoped operator sessions, persistent reviewer queue workflows, curation review records, and evaluation dashboard metrics. Full analytics warehousing and richer admin tooling remain future extensions.
 
+Infrastructure note:
+The application layer now depends on production-shaped abstractions for storage, role policy, and property lookup adapters. The remaining step is to swap local JSON and seeded operators for managed datastore and identity providers rather than redesigning the workflow stack.
+
 ## Immediate Technical Decision
 
 The target production stack remains aligned to the blueprint: `ASP.NET Core`, `PostgreSQL`, object storage, background workers, and a React frontend.

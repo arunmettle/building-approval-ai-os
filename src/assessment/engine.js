@@ -62,7 +62,7 @@ function deriveRisk(matches, unknowns, propertyProfile) {
 }
 
 export function assessProject(intake) {
-  const { intake: enrichedIntake, propertyProfile } = enrichIntakeWithPropertyProfile(intake);
+  const { intake: enrichedIntake, propertyProfile, propertyLookup } = enrichIntakeWithPropertyProfile(intake);
   const thresholdRules = readThresholdRules().filter((rule) => {
     if (rule.projectType !== enrichedIntake.projectType) {
       return false;
@@ -82,6 +82,7 @@ export function assessProject(intake) {
   return {
     input: enrichedIntake,
     propertyProfile,
+    propertyLookup,
     projectType: enrichedIntake.projectType,
     jurisdictionId: enrichedIntake.jurisdictionId || null,
     pathwayLabel: derivePathway(matchedRules, propertyProfile),

@@ -184,7 +184,10 @@ export function buildRecommendation(input, assessment) {
           zone: assessment.propertyProfile.zone,
           overlays: assessment.propertyProfile.overlays,
           currentUse: assessment.propertyProfile.currentUse || null,
-          sources: assessment.propertyProfile.sources || []
+          sources: assessment.propertyLookup?.sources || assessment.propertyProfile.sources || [],
+          lookupStatus: assessment.propertyLookup?.status || "resolved",
+          lookupAdapterId: assessment.propertyLookup?.adapterId || "fixture-profiles",
+          searchHints: assessment.propertyLookup?.searchHints || null
         }
       : null,
     requiredDocuments,

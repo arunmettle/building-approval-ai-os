@@ -1,25 +1,11 @@
-import fs from "node:fs";
-import path from "node:path";
+import { createJsonStore } from "../platform/json-store.js";
 
-const dataRoot = path.resolve(process.cwd(), "data", "app");
-const curationPath = path.join(dataRoot, "curation.json");
-
-function ensureStore() {
-  fs.mkdirSync(dataRoot, { recursive: true });
-
-  if (!fs.existsSync(curationPath)) {
-    fs.writeFileSync(curationPath, "[]", "utf8");
-  }
-}
+const curationStore = createJsonStore("data/app/curation.json", {
+  fallback: []
+});
 
 function readAllRecords() {
-  ensureStore();
-  return JSON.parse(fs.readFileSync(curationPath, "utf8"));
-}
-
-function writeAllRecords(records) {
-  ensureStore();
-  fs.writeFileSync(curationPath, JSON.stringify(records, null, 2), "utf8");
+  return curationStore.read();
 }
 
 export function listCurationReviews(tenantId) {
@@ -31,15 +17,8 @@ export function getCurationReview(itemId, tenantId) {
 }
 
 export function saveCurationReview(review) {
-  const records = readAllRecords();
-  const index = records.findIndex((record) => record.itemId === review.itemId && record.tenantId === review.tenantId);
-
-  if (index === -1) {
-    records.push(review);
-  } else {
-    records[index] = review;
-  }
-
-  writeAllRecords(records);
-  return review;
+  return curationStore.upsert(
+    (record) => record.itemId === review.itemId && record.tenantId === review.tenantId,
+    review
+  );
 }

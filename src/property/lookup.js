@@ -1,72 +1,23 @@
-import fs from "node:fs";
-import path from "node:path";
 import { propertyProfileContract } from "../app/contracts/property-profile.js";
-
-function readPropertyProfiles() {
-  const profilesPath = path.resolve(process.cwd(), "src", "property", "profiles.json");
-
-  if (!fs.existsSync(profilesPath)) {
-    return [];
-  }
-
-  return JSON.parse(fs.readFileSync(profilesPath, "utf8"));
-}
-
-function normalizeKey(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
-function assertProfile(profile) {
-  for (const field of propertyProfileContract.requiredFields) {
-    if (!(field in profile)) {
-      throw new Error(`Property profile missing required field: ${field}`);
-    }
-  }
-}
-
-function deriveLookupCandidates(intake) {
-  return [
-    intake.propertyProfileId,
-    intake.propertyLookupKey,
-    intake.address,
-    intake.lotPlan
-  ]
-    .filter(Boolean)
-    .map(normalizeKey);
-}
+import { lookupProperty } from "./adapters.js";
 
 export function resolvePropertyProfile(intake) {
-  const profiles = readPropertyProfiles();
-  const candidates = deriveLookupCandidates(intake);
+  return lookupProperty(intake).propertyProfile || null;
+}
 
-  for (const profile of profiles) {
-    assertProfile(profile);
-    const profileKeys = [
-      profile.propertyProfileId,
-      profile.lookupKey,
-      profile.address,
-      ...(profile.aliases || [])
-    ].map(normalizeKey);
-
-    if (candidates.some((candidate) => profileKeys.includes(candidate))) {
-      return profile;
-    }
-  }
-
-  return null;
+export function resolvePropertyLookup(intake) {
+  return lookupProperty(intake);
 }
 
 export function enrichIntakeWithPropertyProfile(intake) {
-  const propertyProfile = resolvePropertyProfile(intake);
+  const lookup = lookupProperty(intake);
+  const propertyProfile = lookup.propertyProfile;
 
   if (!propertyProfile) {
     return {
       intake,
-      propertyProfile: null
+      propertyProfile: null,
+      propertyLookup: lookup
     };
   }
 
@@ -83,7 +34,8 @@ export function enrichIntakeWithPropertyProfile(intake) {
 
   return {
     intake: enriched,
-    propertyProfile
+    propertyProfile,
+    propertyLookup: lookup
   };
 }
 

@@ -1,8 +1,4 @@
-import fs from "node:fs";
-import path from "node:path";
-
-const dataRoot = path.resolve(process.cwd(), "data", "app");
-const casesPath = path.join(dataRoot, "cases.json");
+import { createJsonStore } from "../platform/json-store.js";
 const legacyTenantId = "tenant-sunrise-installers";
 
 function migrateLegacyCase(caseRecord) {
@@ -14,22 +10,13 @@ function migrateLegacyCase(caseRecord) {
   };
 }
 
-function ensureStore() {
-  fs.mkdirSync(dataRoot, { recursive: true });
-
-  if (!fs.existsSync(casesPath)) {
-    fs.writeFileSync(casesPath, "[]", "utf8");
-  }
-}
+const caseStore = createJsonStore("data/app/cases.json", {
+  fallback: [],
+  migrate: migrateLegacyCase
+});
 
 function readAllCases() {
-  ensureStore();
-  return JSON.parse(fs.readFileSync(casesPath, "utf8")).map(migrateLegacyCase);
-}
-
-function writeAllCases(cases) {
-  ensureStore();
-  fs.writeFileSync(casesPath, JSON.stringify(cases, null, 2), "utf8");
+  return caseStore.read();
 }
 
 export function listCases(tenantId) {
@@ -43,17 +30,7 @@ export function getCaseById(caseId, tenantId) {
 }
 
 export function saveCase(caseRecord) {
-  const cases = readAllCases();
-  const index = cases.findIndex((item) => item.caseId === caseRecord.caseId);
-
-  if (index === -1) {
-    cases.push(caseRecord);
-  } else {
-    cases[index] = caseRecord;
-  }
-
-  writeAllCases(cases);
-  return caseRecord;
+  return caseStore.upsert((item) => item.caseId === caseRecord.caseId, caseRecord);
 }
 
 export function nextCaseId() {
