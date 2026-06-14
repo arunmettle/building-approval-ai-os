@@ -69,6 +69,24 @@ Additional API endpoints:
 - `GET /api/evaluation/dashboard`
 - `GET /api/curation/items`
 
+## Deployment Direction
+
+Current recommendation:
+
+- `Supabase` for the next productionization step
+
+Why:
+
+- managed Postgres fits the current domain model directly
+- built-in auth plus Row Level Security fits tenant-scoped access control
+- built-in storage fits source files, snapshots, and generated reports
+
+Supabase bootstrap assets in this repo:
+
+- [schema.sql](/C:/Users/arunk/Documents/Codex/2026-06-13/building-approval-ai-os-blueprint-pack/supabase/schema.sql)
+- `npm run db:export-supabase`
+- [PHASE-SUPABASE-BOOTSTRAP.md](/C:/Users/arunk/Documents/Codex/2026-06-13/building-approval-ai-os-blueprint-pack/docs/PHASE-SUPABASE-BOOTSTRAP.md)
+
 ## Research Loop
 
 Run the autoresearch loop:

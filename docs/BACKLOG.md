@@ -7,7 +7,7 @@
 - Start evidence-backed narrative explanation templates for more project types.
 - Add deeper admin curation actions that write back to extracted rules and evidence stores.
 - Expand evaluation dashboards into trend views, reviewer correction slices, and source-quality scorecards.
-- Replace seeded operator auth and JSON persistence with managed identity and database services.
+- Replace seeded operator auth and JSON persistence with Supabase-backed auth, Postgres, and storage services.
 
 ## Next
 
